@@ -35,6 +35,21 @@ enum Expr:
     case Annotate(expr, _type) =>
       expr.numberGoals.map(expr => Annotate(expr, _type))
 
+  /**
+    * Fills the hole identified by the given [[goal]] number, using the given [[content]] expression
+    */
+  def fillGoal(goal: GoalNumber, content: Expr): Expr = self match
+    case expr: Var             => expr
+    case Hole(n) if goal == n  => content
+    case expr: Hole            => expr
+    case Lambda(x, body)       => Lambda(x, body.fillGoal(goal, content))
+    case Apply(f, a)           => Apply(f.fillGoal(goal, content), a.fillGoal(goal, content))
+    case Annotate(expr, _type) => Annotate(expr.fillGoal(goal, content), _type)
+
+end Expr
+
+object Expr
+
 enum TypeExpr:
   case Var(name: Identifier)
   case Function(from: TypeExpr, to: TypeExpr)
