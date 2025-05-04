@@ -26,5 +26,5 @@ trait CoreParsers:
 
   val identifier: Parser[Identifier] =
     (alpha ~ alpha.orElse(digit).rep0).mapFilter { (c, str) =>
-      Identifier((c :: str).mkString)
+      Identifier.option((c :: str).mkString)
     }.tokenized

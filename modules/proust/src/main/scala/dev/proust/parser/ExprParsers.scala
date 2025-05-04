@@ -2,6 +2,7 @@ package dev.proust.parser
 
 import cats.parse.Parser
 import dev.proust.lang.Expr
+import dev.proust.lang.GoalNumber
 
 object ExprParsers extends CoreParsers, TypeExprParsers:
 
@@ -12,7 +13,7 @@ object ExprParsers extends CoreParsers, TypeExprParsers:
     Parser.defer(lambda | application | baseExpr)
 
   lazy val baseExpr: Parser[Expr] =
-    Parser.defer(variable | annotatedExpr.inParens)
+    Parser.defer(hole | variable | annotatedExpr.inParens)
 
   lazy val variable: Parser[Expr.Var] =
     identifier.map(Expr.Var.apply)
@@ -25,6 +26,9 @@ object ExprParsers extends CoreParsers, TypeExprParsers:
 
   lazy val application: Parser[Expr] =
     baseExpr.rep.map(_.reduceLeft(Expr.Apply.apply))
+
+  lazy val hole: Parser[Expr] =
+    matching('?').as(Expr.Hole(GoalNumber(0)))
 
   def annotated(parser: Parser[Expr]): Parser[Expr] =
     (expr ~ (matching(':') *> typeExpr).?).map {

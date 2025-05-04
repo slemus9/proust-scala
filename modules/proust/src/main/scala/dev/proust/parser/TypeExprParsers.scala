@@ -8,8 +8,8 @@ trait TypeExprParsers:
   self: CoreParsers =>
 
   lazy val typeExpr: Parser[TypeExpr] =
-    baseTypeExpr.repSep(matching("->")).map { typeExprs =>
-      typeExprs.reduceRight((t1, t2) => t2.tupleLeft(t1).map(TypeExpr.Function.apply)).value
+    baseTypeExpr.repSep(matching("->")).map { types =>
+      types.reduceRight((t1, t2) => t2.tupleLeft(t1).map(TypeExpr.Function.apply)).value
     }
 
   lazy val baseTypeExpr: Parser[TypeExpr] =
