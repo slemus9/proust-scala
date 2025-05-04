@@ -30,6 +30,8 @@ object TypeChecker:
     case (Expr.Lambda(x, body), f @ TypeExpr.Function(t1, t2)) =>
       check(context + (x -> t1), body, t2) as f
 
+    case (Expr.Hole(_), _type) => _type.pure
+
     case (expr, _type) =>
       synth(context, expr).filterOrElse(
         _ == _type,
@@ -53,7 +55,9 @@ object TypeChecker:
 
     case Expr.Var(x) => context.get(x).toRight(TypeSynthError(expr))
 
-    case _: Expr.Lambda => TypeSynthError(expr).raiseError
+    case expr: Expr.Hole => TypeSynthError(expr).raiseError
+
+    case expr: Expr.Lambda => TypeSynthError(expr).raiseError
 
     case Expr.Annotate(expr, _type) => check(context, expr, _type)
 

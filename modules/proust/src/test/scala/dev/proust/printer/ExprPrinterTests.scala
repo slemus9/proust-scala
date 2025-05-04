@@ -1,49 +1,31 @@
 package dev.proust.printer
 
-import dev.proust.lang.Expr
-import dev.proust.lang.Identifier
+import dev.proust.lang.GoalNumber
+import dev.proust.parser.ExprParsers
 import weaver.FunSuite
 
 object ExprPrinterTests extends FunSuite:
 
   test("prints variables"):
-    val variable: Expr.Var = Expr.Var(Identifier("xsd21s").get)
-    expect.same(
-      expected = variable.name,
-      found = ExprPrinter.print(variable)
-    )
+    val program = "xsd21s"
+    val expr    = ExprParsers.annotatedExpr.parseAll(program).toOption.get
+    expect.same(expected = program, found = ExprPrinter.print(expr))
 
   test("prints functions"):
-    val fun = Expr.Lambda(
-      Identifier("x").get,
-      Expr.Lambda(
-        Identifier("y").get,
-        Expr.Var(Identifier("x").get)
-      )
-    )
-
-    expect.same(
-      expected = "\\x -> \\y -> x",
-      found = ExprPrinter.print(fun)
-    )
+    val program = "\\x -> \\y -> x"
+    val expr    = ExprParsers.annotatedExpr.parseAll(program).toOption.get
+    expect.same(expected = program, found = ExprPrinter.print(expr))
 
   test("prints function applications"):
-    val expr = Expr.Apply(
-      Expr.Apply(
-        Expr.Apply(
-          Expr.Apply(
-            Expr.Var(Identifier("f").get),
-            Expr.Lambda(Identifier("x").get, Expr.Var(Identifier("x").get))
-          ),
-          Expr.Var(Identifier("y").get)
-        ),
-        Expr.Apply(Expr.Var(Identifier("g").get), Expr.Var(Identifier("z").get))
-      ),
-      Expr.Var(Identifier("w").get)
-    )
+    val program = "f (\\x -> x) y (g z) w"
+    val expr    = ExprParsers.annotatedExpr.parseAll(program).toOption.get
+    expect.same(expected = program, found = ExprPrinter.print(expr))
+
+  test("prints holes"):
+    val program = "\\x y z -> f (\\x -> ?) ? (\\a b -> b ?) ?"
+    val expr    = ExprParsers.annotatedExpr.parseAll(program).toOption.get
 
     expect.same(
-      expected = "f (\\x -> x) y (g z) w",
-      found = ExprPrinter.print(expr)
+      expected = "\\x -> \\y -> \\z -> f (\\x -> 0?) 1? (\\a -> \\b -> b 2?) 3?",
+      found = ExprPrinter.print(expr.numberGoals.runA(GoalNumber(0)).value)
     )
-end ExprPrinterTests
