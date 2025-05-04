@@ -1,13 +1,13 @@
 package dev.proust.lang
 
-import dev.proust.parser.ExprParsers
+import dev.proust.parser.all.parseExpr
 import weaver.FunSuite
 
 object GoalNumberingTests extends FunSuite:
   import Expr.*
 
   test("assignGoals should assign an increasing integer to each Hole in the expression"):
-    val expr                       = ExprParsers.annotatedExpr.parseAll(program).toOption.get
+    val expr                       = parseExpr(program).toOption.get
     val (totalGoals, numberedExpr) = expr.assignGoals.run(GoalNumber(0)).value
 
     expect.same(expected = 4, found = totalGoals) &&
