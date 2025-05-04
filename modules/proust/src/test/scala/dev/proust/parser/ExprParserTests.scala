@@ -3,6 +3,7 @@ package dev.proust.parser
 import dev.proust.lang.Expr
 import dev.proust.lang.GoalNumber
 import dev.proust.lang.Identifier
+import dev.proust.parser.all.parseExpr
 import weaver.FunSuite
 
 object ExprParserTests extends FunSuite:
@@ -11,7 +12,7 @@ object ExprParserTests extends FunSuite:
     val expr: Expr.Var = Expr.Var(Identifier("xY3z1"))
     expect.same(
       expected = Right(expr),
-      found = ExprParsers.annotatedExpr.parseAll(expr.name)
+      found = parseExpr(expr.name)
     )
 
   test("holes are identified by a '?' character"):
@@ -22,5 +23,5 @@ object ExprParserTests extends FunSuite:
     )
     expect.same(
       expected = Right(expr),
-      found = ExprParsers.annotatedExpr.parseAll(program)
+      found = parseExpr(program)
     )

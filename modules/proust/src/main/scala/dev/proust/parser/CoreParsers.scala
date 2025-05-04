@@ -4,6 +4,7 @@ import cats.parse.Parser
 import cats.parse.Parser0
 import cats.parse.Rfc5234.alpha
 import cats.parse.Rfc5234.digit
+import dev.proust.lang.GoalNumber
 import dev.proust.lang.Identifier
 
 trait CoreParsers:
@@ -28,3 +29,8 @@ trait CoreParsers:
     (alpha ~ alpha.orElse(digit).rep0).mapFilter { (c, str) =>
       Identifier.option((c :: str).mkString)
     }.tokenized
+
+  val goalNumber: Parser[GoalNumber] =
+    digit.rep.map { digitStr =>
+      GoalNumber.assume(digitStr.toList.mkString.toInt)
+    }
