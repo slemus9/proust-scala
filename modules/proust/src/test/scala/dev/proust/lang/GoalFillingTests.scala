@@ -15,12 +15,12 @@ object GoalFillingTests extends FunSuite:
     val initialGoal     = GoalNumber(0)
 
     expect.same(
-      expected = expectedExpr.numberGoals.runA(initialGoal).value,
-      found = expr.numberGoals
+      expected = expectedExpr.assignGoals.runA(initialGoal).value,
+      found = expr.assignGoals
         .runA(initialGoal)
         .value
         .fillGoal(GoalNumber(1), holeContentExpr)
-        .numberGoals // re-assign hole numbers for the results to be equal
+        .assignGoals // re-assign hole numbers for the results to be equal
         .runA(initialGoal)
         .value
     )

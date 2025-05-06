@@ -6,9 +6,9 @@ import weaver.FunSuite
 object GoalNumberingTests extends FunSuite:
   import Expr.*
 
-  test("numberGoals should assign an increasing integer to each Hole in the expression"):
+  test("assignGoals should assign an increasing integer to each Hole in the expression"):
     val expr                       = ExprParsers.annotatedExpr.parseAll(program).toOption.get
-    val (totalGoals, numberedExpr) = expr.numberGoals.run(GoalNumber(0)).value
+    val (totalGoals, numberedExpr) = expr.assignGoals.run(GoalNumber(0)).value
 
     expect.same(expected = 4, found = totalGoals) &&
     expect.same(expected = expectedExpr, found = numberedExpr)

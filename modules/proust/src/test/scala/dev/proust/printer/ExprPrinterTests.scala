@@ -27,5 +27,5 @@ object ExprPrinterTests extends FunSuite:
 
     expect.same(
       expected = "\\x -> \\y -> \\z -> f (\\x -> 0?) 1? (\\a -> \\b -> b 2?) 3?",
-      found = ExprPrinter.print(expr.numberGoals.runA(GoalNumber(0)).value)
+      found = ExprPrinter.print(expr.assignGoals.runA(GoalNumber(0)).value)
     )
