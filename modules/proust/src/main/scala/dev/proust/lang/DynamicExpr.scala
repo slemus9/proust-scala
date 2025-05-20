@@ -1,7 +1,7 @@
 package dev.proust.lang
 
 import cats.kernel.Eq
-import cats.syntax.eq.*
+import cats.syntax.all.*
 
 import scala.collection.immutable.HashMap
 
@@ -11,7 +11,7 @@ import scala.collection.immutable.HashMap
 final case class DynamicExpr private (
     expr: Expr,
     numGoals: GoalNumber,
-    goalAssignment: Map[GoalNumber, Expr]
+    filledGoals: Map[GoalNumber, Expr]
 ):
 
   lazy val goalRange = 0 until numGoals
@@ -20,18 +20,18 @@ final case class DynamicExpr private (
     * Checks if all the holes are filled
     */
   lazy val isComplete: Boolean =
-    goalAssignment.keySet.map(_.value) === goalRange.toSet
+    filledGoals.keySet.map(_.value) === goalRange.toSet
 
-  def getExpr(goal: GoalNumber): Option[Expr] =
-    goalAssignment.get(goal)
+  def getGoalExpr(goal: GoalNumber): Option[Expr] =
+    filledGoals.get(goal)
 
   /**
-    * Replaces holes with expressions in accordance to the [[goalAssignment]] map
+    * Replaces holes with expressions in accordance to the [[filledGoals]] map
     */
   lazy val coalesced: Expr =
     def go(expr: Expr): Expr = expr match
       case expr: Expr.Var             => expr
-      case Expr.Hole(goal)            => getExpr(goal).fold(expr)(go)
+      case Expr.Hole(goal)            => getGoalExpr(goal).fold(expr)(go)
       case Expr.Lambda(x, body)       => Expr.Lambda(x, go(body))
       case Expr.Apply(f, a)           => Expr.Apply(go(f), go(a))
       case Expr.Annotate(expr, _type) => Expr.Annotate(go(expr), _type)
@@ -44,12 +44,12 @@ final case class DynamicExpr private (
     * performed
     */
   def fillGoal(goal: GoalNumber, content: Expr): DynamicExpr =
-    if !goalRange.contains(goal) || goalAssignment.contains(goal) then this
+    if !goalRange.contains(goal) || filledGoals.contains(goal) then this
     else
       val (n, expr) = content.assignGoals.run(numGoals).value
       copy(
         numGoals = n,
-        goalAssignment = goalAssignment + (goal -> expr)
+        filledGoals = filledGoals + (goal -> expr)
       )
 
 end DynamicExpr
@@ -61,7 +61,7 @@ object DynamicExpr:
     new DynamicExpr(
       expr = indexedExpr,
       numGoals,
-      goalAssignment = HashMap.empty
+      filledGoals = HashMap.empty
     )
 
   given Eq[DynamicExpr] = Eq.instance { (d1, d2) =>

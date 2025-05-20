@@ -37,25 +37,11 @@ enum Expr:
     case Annotate(expr, _type) =>
       expr.assignGoals.map(expr => Annotate(expr, _type))
 
-  /**
-    * Fills the hole identified by the given [[goal]] number, using the given [[content]] expression
-    */
-  def fillGoal(goal: GoalNumber, content: Expr): Expr = self match
-    case expr: Var             => expr
-    case Hole(n) if goal == n  => content
-    case expr: Hole            => expr
-    case Lambda(x, body)       => Lambda(x, body.fillGoal(goal, content))
-    case Apply(f, a)           => Apply(f.fillGoal(goal, content), a.fillGoal(goal, content))
-    case Annotate(expr, _type) => Annotate(expr.fillGoal(goal, content), _type)
-
-end Expr
-
 object Expr:
 
-  // Goal numbers don't matter when comparing two Exprs for equality
-  given Eq[GoalNumber] = Eq.instance((_, _) => true)
-
-  given Eq[Expr] = semiauto.eq
+  given Eq[Expr] =
+    given Eq[GoalNumber] = Eq.instance((_, _) => true)
+    semiauto.eq
 
 enum TypeExpr:
   case Var(name: Identifier)
@@ -64,3 +50,7 @@ enum TypeExpr:
   def isRecursive: Boolean = this match
     case _: Function => true
     case _           => false
+
+object TypeExpr:
+
+  given Eq[TypeExpr] = semiauto.eq
