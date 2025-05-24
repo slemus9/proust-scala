@@ -9,7 +9,7 @@ object ExprPrinter extends CorePrinters:
       name
 
     case Expr.Hole(goal) =>
-      s"$goal?"
+      s"?$goal"
 
     case Expr.Lambda(x, body) =>
       s"\\$x -> ${print(body)}"

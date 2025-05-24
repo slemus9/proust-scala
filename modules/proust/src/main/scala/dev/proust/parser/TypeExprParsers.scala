@@ -7,13 +7,13 @@ import dev.proust.lang.TypeExpr
 trait TypeExprParsers:
   self: CoreParsers =>
 
-  lazy val typeExpr: Parser[TypeExpr] =
+  def typeExpr: Parser[TypeExpr] =
     baseTypeExpr.repSep(matching("->")).map { types =>
       types.reduceRight((t1, t2) => t2.tupleLeft(t1).map(TypeExpr.Function.apply)).value
     }
 
-  lazy val baseTypeExpr: Parser[TypeExpr] =
+  def baseTypeExpr: Parser[TypeExpr] =
     Parser.defer(typeVar | typeExpr.inParens)
 
-  lazy val typeVar: Parser[TypeExpr.Var] =
+  def typeVar: Parser[TypeExpr.Var] =
     identifier.map(TypeExpr.Var.apply)
