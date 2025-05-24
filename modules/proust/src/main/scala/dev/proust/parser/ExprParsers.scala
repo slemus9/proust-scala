@@ -7,32 +7,35 @@ import dev.proust.lang.GoalNumber
 trait ExprParsers:
   self: CoreParsers & TypeExprParsers =>
 
-  lazy val annotatedExpr: Parser[Expr] =
+  def annotatedExpr: Parser[Expr] =
     Parser.defer(annotated(expr))
 
-  lazy val expr: Parser[Expr] =
+  def expr: Parser[Expr] =
     Parser.defer(lambda | application | baseExpr)
 
-  lazy val baseExpr: Parser[Expr] =
-    Parser.defer(hole | variable | annotatedExpr.inParens)
+  def baseExpr: Parser[Expr] =
+    Parser.defer(hole | interpolation | variable | annotatedExpr.inParens)
 
-  lazy val variable: Parser[Expr.Var] =
+  def variable: Parser[Expr.Var] =
     identifier.map(Expr.Var.apply)
 
-  lazy val lambda: Parser[Expr.Lambda] =
+  def lambda: Parser[Expr.Lambda] =
     val params = identifier.rep.between(matching('\\'), matching("->"))
     (params ~ expr).map { (params, body) =>
       Expr.Lambda(params.head, params.tail.foldRight(body)(Expr.Lambda.apply))
     }
 
-  lazy val application: Parser[Expr] =
+  def application: Parser[Expr] =
     baseExpr.rep.map(_.reduceLeft(Expr.Apply.apply))
 
-  lazy val hole: Parser[Expr] =
-    (matching('?') *> goalNumber.?).map {
-      case None       => Expr.Hole(GoalNumber(0))
-      case Some(goal) => Expr.Hole(goal)
-    }
+  def hole: Parser[Expr] =
+    matching('?').as(Expr.Hole(GoalNumber(0)))
+
+  /**
+    * Parser used exclusively for string interpolation
+    */
+  def interpolation: Parser[Expr] =
+    matching("i#") *> goalNumber.map(Expr.Hole.apply)
 
   def annotated(parser: Parser[Expr]): Parser[Expr] =
     (expr ~ (matching(':') *> typeExpr).?).map {

@@ -1,19 +1,17 @@
 package dev.proust.lang
 
-import dev.proust.parser.all.parseExpr
+import dev.proust.macros.proust
 import weaver.FunSuite
 
 object GoalNumberingTests extends FunSuite:
   import Expr.*
 
   test("assignGoals should assign an increasing integer to each Hole in the expression"):
-    val expr                       = parseExpr(program).toOption.get
+    val expr                       = proust"\x y z -> f (\x -> ?) ? (\a b -> b ?) ?"
     val (totalGoals, numberedExpr) = expr.assignGoals.run(GoalNumber(0)).value
 
     expect.same(expected = 4, found = totalGoals) &&
     expect.same(expected = expectedExpr, found = numberedExpr)
-
-  private lazy val program = "\\x y z -> f (\\x -> ?) ? (\\a b -> b ?) ?"
 
   private lazy val expectedExpr = Lambda(
     Identifier("x"),

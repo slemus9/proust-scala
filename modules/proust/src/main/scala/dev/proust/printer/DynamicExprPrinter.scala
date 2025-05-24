@@ -14,7 +14,7 @@ object DynamicExprPrinter extends CorePrinters:
           name
 
         case Expr.Hole(goal) =>
-          dyn.getGoalExpr(goal).fold(s"$goal?") { expr =>
+          dyn.getGoalExpr(goal).fold(s"?$goal") { expr =>
             printExpr(expr).inParensIf(expr.isRecursive)
           }
 

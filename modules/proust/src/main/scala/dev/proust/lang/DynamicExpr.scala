@@ -8,7 +8,7 @@ import scala.collection.immutable.HashMap
 /**
   * An Expr whose holes can be filled dynamically with other expressions
   */
-final case class DynamicExpr private (
+final case class DynamicExpr(
     expr: Expr,
     numGoals: GoalNumber,
     filledGoals: Map[GoalNumber, Expr]
