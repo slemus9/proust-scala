@@ -19,6 +19,7 @@ lazy val proust = project
     libraryDependencies ++= Seq(
       "org.typelevel"       %% "cats-core"   % "2.13.0",
       "org.typelevel"       %% "cats-effect" % "3.6.1",
+      "org.typelevel"       %% "cats-mtl"    % "1.5.0",
       "org.typelevel"       %% "cats-parse"  % "1.1.0",
       "org.typelevel"       %% "kittens"     % "3.5.0",
       "io.github.iltotore"  %% "iron"        % "3.0.0",

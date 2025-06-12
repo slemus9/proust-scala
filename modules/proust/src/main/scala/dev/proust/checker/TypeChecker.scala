@@ -1,11 +1,22 @@
 package dev.proust.checker
 
+import cats.data.EitherT
+import cats.data.State
+import cats.mtl.Stateful
 import cats.syntax.all.*
+import cats.MonadError
+import dev.proust.errors.ProustError
+import dev.proust.errors.TypeCheckError
+import dev.proust.errors.TypeSynthError
 import dev.proust.lang.Expr
+import dev.proust.lang.GoalNumber
 import dev.proust.lang.Identifier
 import dev.proust.lang.TypeExpr
 
-object TypeChecker:
+final class TypeChecker[F[_]](using
+    stateful: Stateful[F, GoalContext],
+    errors: MonadError[F, ProustError]
+) {
 
   /**
     * Verifies that the following sequent is valid:
@@ -21,22 +32,24 @@ object TypeChecker:
     * @return
     *   either a [[TypeError]] if the sequent is not valid, or the type of the expression if it is
     */
-  def check(
-      context: Map[Identifier, TypeExpr],
+  def checkExpr(
+      context: TypeContext,
       expr: Expr,
       _type: TypeExpr
-  ): Either[TypeError, TypeExpr] = (expr, _type) match
-
+  ): F[TypeExpr] = (expr, _type) match
     case (Expr.Lambda(x, body), f @ TypeExpr.Function(t1, t2)) =>
-      check(context + (x -> t1), body, t2) as f
+      checkExpr(context + (x -> t1), body, t2) as f
 
-    case (Expr.Hole(_), _type) => _type.pure
+    case (Expr.Hole(goal), _type) =>
+      stateful.modify {
+        _ + (goal -> (_type, context))
+      } as _type
 
     case (expr, _type) =>
-      synth(context, expr).filterOrElse(
-        _ == _type,
-        TypeCheckError(expr, _type)
-      )
+      synthExpr(context, expr).flatMap {
+        case obtained if obtained === _type => _type.pure
+        case _                              => TypeCheckError(expr, _type).raiseError
+      }
 
   /**
     * Synthesizes the type of the given expression from the typing context
@@ -48,23 +61,32 @@ object TypeChecker:
     * @return
     *   the type of the [[expr]], or a [[TypeError]] if the type could not be synthesized
     */
-  def synth(
-      context: Map[Identifier, TypeExpr],
+  def synthExpr(
+      context: TypeContext,
       expr: Expr
-  ): Either[TypeError, TypeExpr] = expr match
-
-    case Expr.Var(x) => context.get(x).toRight(TypeSynthError(expr))
+  ): F[TypeExpr] = expr match
+    case Expr.Var(x) => context.get(x).liftTo[F](TypeSynthError(expr))
 
     case expr: Expr.Hole => TypeSynthError(expr).raiseError
 
     case expr: Expr.Lambda => TypeSynthError(expr).raiseError
 
-    case Expr.Annotate(expr, _type) => check(context, expr, _type)
+    case Expr.Annotate(expr, _type) => checkExpr(context, expr, _type)
 
     case Expr.Apply(f, a) =>
-      synth(context, f).flatMap {
-        case TypeExpr.Function(t1, t2) => check(context, a, t1) as t2
+      synthExpr(context, f).flatMap {
+        case TypeExpr.Function(t1, t2) => checkExpr(context, a, t1) as t2
         case _                         => TypeSynthError(expr).raiseError
       }
+}
 
-end TypeChecker
+type TypeContext = Map[Identifier, TypeExpr]
+type GoalContext = Map[GoalNumber, (TypeExpr, TypeContext)]
+
+type PureTyping = EitherT[State[GoalContext, *], ProustError, *]
+object PureTyping {
+
+  extension [A](computation: PureTyping[A])
+    def runWith(goalCtx: GoalContext): Either[ProustError, A] =
+      computation.value.runA(goalCtx).value
+}
