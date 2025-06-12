@@ -2,6 +2,7 @@ package dev.proust.lang
 
 import cats.kernel.Eq
 import cats.syntax.all.*
+import dev.proust.errors.InvalidGoalExpr
 
 import scala.collection.immutable.HashMap
 
@@ -50,6 +51,17 @@ final case class DynamicExpr(
       copy(
         numGoals = n,
         filledGoals = filledGoals + (goal -> expr)
+      )
+
+  def fillGoal(goal: GoalNumber, numbered: NumberedExpr): Either[InvalidGoalExpr, DynamicExpr] =
+    if !goalRange.contains(goal) || filledGoals.contains(goal) then Right(this)
+    else if numGoals != numbered.from then Left(InvalidGoalExpr(numGoals, goal, numbered))
+    else
+      Right(
+        copy(
+          numGoals = numbered.until,
+          filledGoals = filledGoals + (goal -> numbered.expr)
+        )
       )
 
 end DynamicExpr

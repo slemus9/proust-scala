@@ -1,6 +1,9 @@
 package dev.proust.checker
 
 import cats.syntax.all.*
+import dev.proust.errors.TypeCheckError
+import dev.proust.errors.TypeError
+import dev.proust.errors.TypeSynthError
 import dev.proust.lang.Expr
 import dev.proust.lang.Identifier
 import dev.proust.lang.TypeExpr
