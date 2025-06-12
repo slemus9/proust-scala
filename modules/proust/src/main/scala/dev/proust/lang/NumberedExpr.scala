@@ -2,6 +2,9 @@ package dev.proust.lang
 
 import cats.data.State
 
+/**
+  * Represents an Expr whose goals are assigned using numbers drawn from the range: [from, until)
+  */
 final case class NumberedExpr private (
     from: GoalNumber,
     until: GoalNumber,
@@ -17,6 +20,9 @@ object NumberedExpr {
   def apply(expr: Expr): NumberedExpr =
     apply(from = GoalNumber(0), expr)
 
+  /**
+    * Traverse the Expr tree and assign increasing integers to each of the Holes within it
+    */
   private def assignGoals(expr: Expr): State[GoalNumber, Expr] = expr match
     case expr: Expr.Var => State.pure(expr)
 

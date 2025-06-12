@@ -3,15 +3,14 @@ package dev.proust.lang
 import dev.proust.macros.proust
 import weaver.FunSuite
 
-object GoalNumberingTests extends FunSuite:
+object NumberedExprTests extends FunSuite {
   import Expr.*
 
-  test("assignGoals should assign an increasing integer to each Hole in the expression"):
-    val expr                       = proust"\x y z -> f (\x -> ?) ? (\a b -> b ?) ?"
-    val (totalGoals, numberedExpr) = expr.assignGoals.run(GoalNumber(0)).value
+  test("NumberedExpr should assign an increasing integer to each Hole in the expression"):
+    val numbered = NumberedExpr(proust"\x y z -> f (\x -> ?) ? (\a b -> b ?) ?")
 
-    expect.same(expected = 4, found = totalGoals) &&
-    expect.same(expected = expectedExpr, found = numberedExpr)
+    expect.same(expected = 4, found = numbered.until) &&
+    expect.same(expected = expectedExpr, found = numbered.expr)
 
   private lazy val expectedExpr = Lambda(
     Identifier("x"),
@@ -32,3 +31,4 @@ object GoalNumberingTests extends FunSuite:
       )
     )
   )
+}

@@ -13,7 +13,7 @@ final case class DynamicExpr(
     expr: Expr,
     numGoals: GoalNumber,
     filledGoals: Map[GoalNumber, Expr]
-):
+) {
 
   lazy val goalRange = 0 until numGoals
 
@@ -47,10 +47,10 @@ final case class DynamicExpr(
   def fillGoal(goal: GoalNumber, content: Expr): DynamicExpr =
     if !goalRange.contains(goal) || filledGoals.contains(goal) then this
     else
-      val (n, expr) = content.assignGoals.run(numGoals).value
+      val numbered = NumberedExpr(from = numGoals, content)
       copy(
-        numGoals = n,
-        filledGoals = filledGoals + (goal -> expr)
+        numGoals = numbered.until,
+        filledGoals = filledGoals + (goal -> numbered.expr)
       )
 
   def fillGoal(goal: GoalNumber, numbered: NumberedExpr): Either[InvalidGoalExpr, DynamicExpr] =
@@ -63,19 +63,19 @@ final case class DynamicExpr(
           filledGoals = filledGoals + (goal -> numbered.expr)
         )
       )
+}
 
-end DynamicExpr
-
-object DynamicExpr:
+object DynamicExpr {
 
   def apply(expr: Expr): DynamicExpr =
-    val (numGoals, indexedExpr) = expr.assignGoals.run(GoalNumber(0)).value
+    val numbered = NumberedExpr(expr)
     new DynamicExpr(
-      expr = indexedExpr,
-      numGoals,
+      expr = numbered.expr,
+      numGoals = numbered.until,
       filledGoals = HashMap.empty
     )
 
   given Eq[DynamicExpr] = Eq.instance { (d1, d2) =>
     d1.coalesced === d2.coalesced
   }
+}

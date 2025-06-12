@@ -1,6 +1,6 @@
 package dev.proust.printer
 
-import dev.proust.lang.GoalNumber
+import dev.proust.lang.NumberedExpr
 import dev.proust.parser.all.parseExpr
 import weaver.FunSuite
 
@@ -22,10 +22,10 @@ object ExprPrinterTests extends FunSuite:
     expect.same(expected = program, found = ExprPrinter.print(expr))
 
   test("prints holes"):
-    val program = "\\x y z -> f (\\x -> ?) ? (\\a b -> b ?) ?"
-    val expr    = parseExpr(program).toOption.get
+    val program  = "\\x y z -> f (\\x -> ?) ? (\\a b -> b ?) ?"
+    val numbered = NumberedExpr(parseExpr(program).toOption.get)
 
     expect.same(
       expected = "\\x -> \\y -> \\z -> f (\\x -> ?0) ?1 (\\a -> \\b -> b ?2) ?3",
-      found = ExprPrinter.print(expr.assignGoals.runA(GoalNumber(0)).value)
+      found = ExprPrinter.print(numbered.expr)
     )
