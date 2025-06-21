@@ -4,7 +4,7 @@ import cats.parse.Parser
 import dev.proust.lang.Expr
 import dev.proust.lang.GoalNumber
 
-trait ExprParsers:
+trait ExprParsers {
   self: CoreParsers & TypeExprParsers =>
 
   def annotatedExpr: Parser[Expr] =
@@ -14,7 +14,14 @@ trait ExprParsers:
     Parser.defer(lambda | application | baseExpr)
 
   def baseExpr: Parser[Expr] =
-    Parser.defer(hole | interpolation | variable | annotatedExpr.inParens)
+    Parser.defer(hole | interpolation | variable | pair.inParens)
+
+  // handles 1-tuple and pairs: (e) or (e1, e2)
+  def pair: Parser[Expr] =
+    (annotatedExpr ~ (matching(',') *> annotatedExpr).?).map {
+      case (e1, Some(e2)) => Expr.Pair(e1, e2)
+      case (e, None)      => e
+    }
 
   def variable: Parser[Expr.Var] =
     identifier.map(Expr.Var.apply)
@@ -38,7 +45,8 @@ trait ExprParsers:
     matching("i#") *> goalNumber.map(Expr.Hole.apply)
 
   def annotated(parser: Parser[Expr]): Parser[Expr] =
-    (expr ~ (matching(':') *> typeExpr).?).map {
+    (parser ~ (matching(':') *> typeExpr).?).map {
       case (expr, None)           => expr
       case (expr, Some(typeExpr)) => Expr.Annotate(expr, typeExpr)
     }
+}

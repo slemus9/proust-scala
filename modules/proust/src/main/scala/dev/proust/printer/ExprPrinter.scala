@@ -2,7 +2,7 @@ package dev.proust.printer
 
 import dev.proust.lang.Expr
 
-object ExprPrinter extends CorePrinters:
+object ExprPrinter extends CorePrinters {
 
   def print(expr: Expr): String = expr match
     case Expr.Var(name) =>
@@ -19,3 +19,7 @@ object ExprPrinter extends CorePrinters:
 
     case Expr.Annotate(x, t) =>
       s"${print(x)} : ${TypeExprPrinter.print(t)}"
+
+    case Expr.Pair(e1, e2) =>
+      s"(${print(e1)}, ${print(e2)})"
+}

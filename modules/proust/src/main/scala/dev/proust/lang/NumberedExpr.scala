@@ -39,4 +39,10 @@ object NumberedExpr {
 
     case Expr.Annotate(expr, _type) =>
       assignGoals(expr).map(expr => Expr.Annotate(expr, _type))
+
+    case Expr.Pair(e1, e2) =>
+      for
+        ne1 <- assignGoals(e1)
+        ne2 <- assignGoals(e2)
+      yield Expr.Apply(ne1, ne2)
 }

@@ -7,7 +7,7 @@ import cats.parse.Rfc5234.digit
 import dev.proust.lang.GoalNumber
 import dev.proust.lang.Identifier
 
-trait CoreParsers:
+trait CoreParsers {
 
   final val whitespace: Parser0[String] =
     Parser.charsWhile0(_.isWhitespace)
@@ -37,3 +37,4 @@ trait CoreParsers:
 
   final val goalNumber: Parser[GoalNumber] =
     nat.mapFilter(GoalNumber.option)
+}

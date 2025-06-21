@@ -4,7 +4,7 @@ import cats.Show
 import dev.proust.lang.DynamicExpr
 import dev.proust.lang.Expr
 
-object DynamicExprPrinter extends CorePrinters:
+object DynamicExprPrinter extends CorePrinters {
 
   def print(dyn: DynamicExpr): String =
 
@@ -27,6 +27,10 @@ object DynamicExprPrinter extends CorePrinters:
         case Expr.Annotate(x, t) =>
           s"${printExpr(x)} : ${TypeExprPrinter.print(t)}"
 
+        case Expr.Pair(e1, e2) =>
+          s"(${printExpr(e1)}, ${printExpr(e2)})"
+
     printExpr(dyn.expr)
 
   given Show[DynamicExpr] = Show.show(print)
+}
