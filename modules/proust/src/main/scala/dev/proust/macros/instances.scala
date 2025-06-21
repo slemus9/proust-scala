@@ -10,7 +10,7 @@ import scala.quoted.Expr
 import scala.quoted.Quotes
 import scala.quoted.ToExpr
 
-object instances:
+object instances {
 
   given ToExpr[Identifier] with
     def apply(identifier: Identifier)(using Quotes): Expr[Identifier] =
@@ -38,9 +38,12 @@ object instances:
         case ProustExpr.Lambda(x, body)       => '{ ProustExpr.Lambda(${ Expr(x) }, ${ Expr(body) }) }
         case ProustExpr.Apply(f, a)           => '{ ProustExpr.Apply(${ Expr(f) }, ${ Expr(a) }) }
         case ProustExpr.Annotate(expr, _type) => '{ ProustExpr.Annotate(${ Expr(expr) }, ${ Expr(_type) }) }
+        case ProustExpr.Pair(e1, e2)          => '{ ProustExpr.Pair(${ Expr(e1) }, ${ Expr(e2) }) }
 
   given ToExpr[TypeExpr] with
     def apply(expr: TypeExpr)(using Quotes): Expr[TypeExpr] =
       expr match
         case TypeExpr.Var(name)          => '{ TypeExpr.Var(${ Expr(name) }) }
         case TypeExpr.Function(from, to) => '{ TypeExpr.Function(${ Expr(from) }, ${ Expr(to) }) }
+        case TypeExpr.Pair(t1, t2)       => '{ TypeExpr.Pair(${ Expr(t1) }, ${ Expr(t2) }) }
+}

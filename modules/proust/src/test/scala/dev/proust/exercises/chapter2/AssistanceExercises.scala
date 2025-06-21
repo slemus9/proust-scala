@@ -1,27 +1,21 @@
-package dev.proust.assistant
+package dev.proust.exercises.chapter2
 
 import cats.data.EitherT
 import cats.mtl.Stateful
 import cats.syntax.all.*
-import dev.proust.checker.PureTyping
-import dev.proust.checker.PureTyping.runWith
-import dev.proust.checker.TypeChecker
+import dev.proust.assistant.ProofAssistant
+import dev.proust.checker.*
+import dev.proust.checker.PureTyping.runWithEmpty
 import dev.proust.errors.ProustError
-import dev.proust.lang.DynamicExpr
-import dev.proust.lang.Expr
-import dev.proust.lang.GoalNumber
-import dev.proust.macros.proust
-import dev.proust.macros.proustType
+import dev.proust.lang.*
+import dev.proust.macros.*
 import weaver.FunSuite
 
-/**
-  * Exercises from Chapter 2.6
-  */
-object ImplicationProofTests extends FunSuite {
+object AssistanceExercises extends FunSuite {
 
   val assistant = ProofAssistant(TypeChecker[PureTyping])
 
-  test("Prove the formula (A -> B -> C) -> (A -> B) -> (A -> C)"):
+  test("Exercise 2.6.1. (A -> B -> C) -> (A -> B) -> (A -> C)"):
     val goalType = proustType"(A -> B -> C) -> (A -> B) -> (A -> C)"
     val expected = Expr.Annotate(proust"\f g a -> f a (g a)", goalType)
 
@@ -37,10 +31,10 @@ object ImplicationProofTests extends FunSuite {
 
     expect.same(
       expected = Right(expected),
-      found = proof.runWith(Map.empty).map(_.coalesced)
+      found = proof.runWithEmpty.map(_.coalesced)
     )
 
-  test("Prove the formula ((A -> B) -> (A -> C)) -> (A -> B -> C)"):
+  test("Exercise 2.6.2. ((A -> B) -> (A -> C)) -> (A -> B -> C)"):
     val goalType = proustType"((A -> B) -> (A -> C)) -> (A -> B -> C)"
     val expected = Expr.Annotate(proust"\f a b -> f (\a -> b) a", goalType)
 
@@ -52,10 +46,10 @@ object ImplicationProofTests extends FunSuite {
 
     expect.same(
       expected = Right(expected),
-      found = proof.runWith(Map.empty).map(_.coalesced)
+      found = proof.runWithEmpty.map(_.coalesced)
     )
 
-  test("Prove the formula (B -> C) -> (A -> B) -> (A -> C)"):
+  test("Exercise 2.6.3. (B -> C) -> (A -> B) -> (A -> C)"):
     val goalType = proustType"(B -> C) -> (A -> B) -> (A -> C)"
     val expected = Expr.Annotate(proust"\f g a -> f (g a)", goalType)
 
@@ -68,6 +62,6 @@ object ImplicationProofTests extends FunSuite {
 
     expect.same(
       expected = Right(expected),
-      found = proof.runWith(Map.empty).map(_.coalesced)
+      found = proof.runWithEmpty.map(_.coalesced)
     )
 }

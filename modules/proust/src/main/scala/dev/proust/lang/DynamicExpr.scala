@@ -36,6 +36,7 @@ final case class DynamicExpr(
       case Expr.Lambda(x, body)       => Expr.Lambda(x, go(body))
       case Expr.Apply(f, a)           => Expr.Apply(go(f), go(a))
       case Expr.Annotate(expr, _type) => Expr.Annotate(go(expr), _type)
+      case Expr.Pair(e1, e2)          => Expr.Pair(go(e1), go(e2))
 
     go(expr)
 

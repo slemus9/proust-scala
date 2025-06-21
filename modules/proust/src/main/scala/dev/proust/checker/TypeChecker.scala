@@ -45,6 +45,9 @@ final class TypeChecker[F[_]](using
         _ + (goal -> (_type, context))
       } as _type
 
+    case (Expr.Pair(e1, e2), TypeExpr.Pair(t1, t2)) =>
+      (checkExpr(context, e1, t1), checkExpr(context, e2, t2)).mapN(TypeExpr.Pair.apply)
+
     case (expr, _type) =>
       synthExpr(context, expr).flatMap {
         case obtained if obtained === _type => _type.pure
@@ -73,6 +76,21 @@ final class TypeChecker[F[_]](using
 
     case Expr.Annotate(expr, _type) => checkExpr(context, expr, _type)
 
+    case Expr.Pair(e1, e2) =>
+      (synthExpr(context, e1), synthExpr(context, e2)).mapN(TypeExpr.Pair.apply)
+
+    case Expr.Apply(Expr.Var(Expr.Pair.First), p) =>
+      synthExpr(context, p).flatMap {
+        case TypeExpr.Pair(t, _) => t.pure
+        case _                   => TypeSynthError(p).raiseError
+      }
+
+    case Expr.Apply(Expr.Var(Expr.Pair.Second), p) =>
+      synthExpr(context, p).flatMap {
+        case TypeExpr.Pair(_, t) => t.pure
+        case _                   => TypeSynthError(p).raiseError
+      }
+
     case Expr.Apply(f, a) =>
       synthExpr(context, f).flatMap {
         case TypeExpr.Function(t1, t2) => checkExpr(context, a, t1) as t2
@@ -89,4 +107,7 @@ object PureTyping {
   extension [A](computation: PureTyping[A])
     def runWith(goalCtx: GoalContext): Either[ProustError, A] =
       computation.value.runA(goalCtx).value
+
+    def runWithEmpty: Either[ProustError, A] =
+      computation.runWith(Map.empty)
 }

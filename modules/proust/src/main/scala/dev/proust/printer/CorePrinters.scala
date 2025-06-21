@@ -1,6 +1,6 @@
 package dev.proust.printer
 
-trait CorePrinters:
+trait CorePrinters {
 
   extension (str: String)
     def inParens: String =
@@ -8,3 +8,4 @@ trait CorePrinters:
 
     def inParensIf(condition: Boolean): String =
       if condition then str.inParens else str
+}

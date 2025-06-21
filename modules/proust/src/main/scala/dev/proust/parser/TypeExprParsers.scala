@@ -4,7 +4,7 @@ import cats.parse.Parser
 import cats.syntax.all.*
 import dev.proust.lang.TypeExpr
 
-trait TypeExprParsers:
+trait TypeExprParsers {
   self: CoreParsers =>
 
   def typeExpr: Parser[TypeExpr] =
@@ -13,7 +13,15 @@ trait TypeExprParsers:
     }
 
   def baseTypeExpr: Parser[TypeExpr] =
-    Parser.defer(typeVar | typeExpr.inParens)
+    Parser.defer(typeVar | pairType.inParens)
+
+  // handles 1-tuple and pairs: (e) or (e1, e2)
+  def pairType: Parser[TypeExpr] =
+    (typeExpr ~ (matching(',') *> typeExpr).?).map {
+      case (t1, Some(t2)) => TypeExpr.Pair(t1, t2)
+      case (t, None)      => t
+    }
 
   def typeVar: Parser[TypeExpr.Var] =
     identifier.map(TypeExpr.Var.apply)
+}
