@@ -13,7 +13,7 @@ trait TypeExprParsers {
     }
 
   def baseTypeExpr: Parser[TypeExpr] =
-    Parser.defer(typeVar | pairType.inParens)
+    Parser.defer(disjunctionType | typeVar | pairType.inParens)
 
   // handles 1-tuple and pairs: (e) or (e1, e2)
   def pairType: Parser[TypeExpr] =
@@ -21,6 +21,9 @@ trait TypeExprParsers {
       case (t1, Some(t2)) => TypeExpr.Pair(t1, t2)
       case (t, None)      => t
     }
+
+  def disjunctionType: Parser[TypeExpr.Disjunction] =
+    matching("Either") *> (baseTypeExpr ~ baseTypeExpr).map(TypeExpr.Disjunction.apply)
 
   def typeVar: Parser[TypeExpr.Var] =
     identifier.map(TypeExpr.Var.apply)

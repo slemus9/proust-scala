@@ -5,13 +5,8 @@ import cats.data.State
 import cats.mtl.Stateful
 import cats.syntax.all.*
 import cats.MonadError
-import dev.proust.errors.ProustError
-import dev.proust.errors.TypeCheckError
-import dev.proust.errors.TypeSynthError
-import dev.proust.lang.Expr
-import dev.proust.lang.GoalNumber
-import dev.proust.lang.Identifier
-import dev.proust.lang.TypeExpr
+import dev.proust.errors.*
+import dev.proust.lang.*
 
 final class TypeChecker[F[_]](using
     stateful: Stateful[F, GoalContext],
@@ -48,6 +43,21 @@ final class TypeChecker[F[_]](using
     case (Expr.Pair(e1, e2), TypeExpr.Pair(t1, t2)) =>
       (checkExpr(context, e1, t1), checkExpr(context, e2, t2)).mapN(TypeExpr.Pair.apply)
 
+    case (Expr.Disjunction.Left(e), TypeExpr.Disjunction(t, _)) =>
+      checkExpr(context, e, t)
+
+    case (Expr.Disjunction.Right(e), TypeExpr.Disjunction(_, t)) =>
+      checkExpr(context, e, t)
+
+    case (Expr.Disjunction.Fold(e, onLeft, onRight), t3) =>
+      synthExpr(context, e).flatMap {
+        case TypeExpr.Disjunction(t1, t2) =>
+          checkExpr(context, onLeft, TypeExpr.Function(t1, t3)) >>
+            checkExpr(context, onRight, TypeExpr.Function(t2, t3)) as t3
+
+        case _ => TypeCheckError(expr, t3).raiseError
+      }
+
     case (expr, _type) =>
       synthExpr(context, expr).flatMap {
         case obtained if obtained === _type => _type.pure
@@ -74,18 +84,20 @@ final class TypeChecker[F[_]](using
 
     case expr: Expr.Lambda => TypeSynthError(expr).raiseError
 
+    case Expr.Disjunction.Left(_) | Expr.Disjunction.Right(_) => TypeSynthError(expr).raiseError
+
     case Expr.Annotate(expr, _type) => checkExpr(context, expr, _type)
 
     case Expr.Pair(e1, e2) =>
       (synthExpr(context, e1), synthExpr(context, e2)).mapN(TypeExpr.Pair.apply)
 
-    case Expr.Apply(Expr.Var(Expr.Pair.First), p) =>
+    case Expr.Pair.First(p) =>
       synthExpr(context, p).flatMap {
         case TypeExpr.Pair(t, _) => t.pure
         case _                   => TypeSynthError(p).raiseError
       }
 
-    case Expr.Apply(Expr.Var(Expr.Pair.Second), p) =>
+    case Expr.Pair.Second(p) =>
       synthExpr(context, p).flatMap {
         case TypeExpr.Pair(_, t) => t.pure
         case _                   => TypeSynthError(p).raiseError

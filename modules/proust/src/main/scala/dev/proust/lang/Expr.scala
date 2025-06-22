@@ -14,15 +14,49 @@ enum Expr {
   case Pair(first: Expr, second: Expr)
 
   def isRecursive: Boolean = self match
-    case _: (Lambda | Apply | Annotate) => true
-    case _                              => false
+    case _: (Var | Hole) => false
+    case _               => true
 }
 
 object Expr {
 
+  def unaryPattern(funName: String, expr: Expr): Option[Expr] =
+    expr match
+      case Apply(Var(f), expr) if f == funName => Some(expr)
+      case _                                   => None
+
+  def ternaryPattern(funName: String, expr: Expr): Option[(Expr, Expr, Expr)] =
+    expr match
+      case Apply(Apply(Apply(Var(f), e1), e2), e3) if f == funName => Some(e1, e2, e3)
+      case _                                                       => None
+
   object Pair {
-    val First  = "first"
-    val Second = "second"
+    object First {
+      val FunName                           = "first"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+    }
+
+    object Second {
+      val FunName                           = "second"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+    }
+  }
+
+  object Disjunction {
+    object Left {
+      val FunName                           = "left"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+    }
+
+    object Right {
+      val FunName                           = "right"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+    }
+
+    object Fold {
+      val FunName                                         = "foldEither"
+      def unapply(expr: Expr): Option[(Expr, Expr, Expr)] = ternaryPattern(FunName, expr)
+    }
   }
 
   given Eq[Expr] =
@@ -34,10 +68,11 @@ enum TypeExpr {
   case Var(name: Identifier)
   case Function(from: TypeExpr, to: TypeExpr)
   case Pair(first: TypeExpr, second: TypeExpr)
+  case Disjunction(left: TypeExpr, right: TypeExpr)
 
   def isRecursive: Boolean = this match
-    case _: Function => true
-    case _           => false
+    case _: Var => false
+    case _      => true
 }
 
 object TypeExpr {

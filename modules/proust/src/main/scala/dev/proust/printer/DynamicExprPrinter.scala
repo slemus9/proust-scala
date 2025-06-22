@@ -28,7 +28,7 @@ object DynamicExprPrinter extends CorePrinters {
           s"${printExpr(x)} : ${TypeExprPrinter.print(t)}"
 
         case Expr.Pair(e1, e2) =>
-          s"(${printExpr(e1)}, ${printExpr(e2)})"
+          s"(${printExpr(e1).inParensIf(e1.isRecursive)}, ${printExpr(e2).inParensIf(e2.isRecursive)})"
 
     printExpr(dyn.expr)
 
