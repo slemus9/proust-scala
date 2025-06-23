@@ -13,7 +13,7 @@ trait TypeExprParsers {
     }
 
   def baseTypeExpr: Parser[TypeExpr] =
-    Parser.defer(disjunctionType | typeVar | pairType.inParens)
+    Parser.defer(negationType | disjunctionType | typeVar | pairType.inParens)
 
   // handles 1-tuple and pairs: (e) or (e1, e2)
   def pairType: Parser[TypeExpr] =
@@ -23,7 +23,10 @@ trait TypeExprParsers {
     }
 
   def disjunctionType: Parser[TypeExpr.Disjunction] =
-    matching("Either") *> (baseTypeExpr ~ baseTypeExpr).map(TypeExpr.Disjunction.apply)
+    matching(TypeExpr.Disjunction.Name) *> (baseTypeExpr ~ baseTypeExpr).map(TypeExpr.Disjunction.apply)
+
+  def negationType: Parser[TypeExpr] =
+    matching(TypeExpr.Negation.Name) *> baseTypeExpr.map(TypeExpr.Negation.apply)
 
   def typeVar: Parser[TypeExpr.Var] =
     identifier.map(TypeExpr.Var.apply)

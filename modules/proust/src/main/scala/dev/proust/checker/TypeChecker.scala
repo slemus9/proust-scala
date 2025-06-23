@@ -49,7 +49,7 @@ final class TypeChecker[F[_]](using
     case (Expr.Disjunction.Right(e), TypeExpr.Disjunction(_, t)) =>
       checkExpr(context, e, t)
 
-    case (Expr.Disjunction.Fold(e, onLeft, onRight), t3) =>
+    case (Expr.Disjunction.Elim(e, onLeft, onRight), t3) =>
       synthExpr(context, e).flatMap {
         case TypeExpr.Disjunction(t1, t2) =>
           checkExpr(context, onLeft, TypeExpr.Function(t1, t3)) >>
@@ -57,6 +57,9 @@ final class TypeChecker[F[_]](using
 
         case _ => TypeCheckError(expr, t3).raiseError
       }
+
+    case (Expr.Empty.Elim(e), t) =>
+      checkExpr(context, e, TypeExpr.Empty) as t
 
     case (expr, _type) =>
       synthExpr(context, expr).flatMap {
