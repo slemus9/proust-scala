@@ -12,5 +12,8 @@ object TypeExprPrinter extends CorePrinters {
       s"${print(a).inParensIf(a.isRecursive)} -> ${print(b)}"
 
     case TypeExpr.Pair(t1, t2) =>
-      s"(${print(t1)}, ${print(t2)})"
+      s"(${print(t1).inParensIf(t1.isRecursive)}, ${print(t2).inParensIf(t2.isRecursive)})"
+
+    case TypeExpr.Disjunction(t1, t2) =>
+      s"Either ${print(t1).inParensIf(t1.isRecursive)} ${print(t2).inParensIf(t2.isRecursive)}"
 }

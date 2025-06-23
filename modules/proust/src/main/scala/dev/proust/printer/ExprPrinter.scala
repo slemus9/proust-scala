@@ -21,5 +21,5 @@ object ExprPrinter extends CorePrinters {
       s"${print(x)} : ${TypeExprPrinter.print(t)}"
 
     case Expr.Pair(e1, e2) =>
-      s"(${print(e1)}, ${print(e2)})"
+      s"(${print(e1).inParensIf(e1.isRecursive)}, ${print(e2).inParensIf(e2.isRecursive)})"
 }

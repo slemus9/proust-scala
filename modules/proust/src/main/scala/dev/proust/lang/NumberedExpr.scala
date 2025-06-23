@@ -44,5 +44,5 @@ object NumberedExpr {
       for
         ne1 <- assignGoals(e1)
         ne2 <- assignGoals(e2)
-      yield Expr.Apply(ne1, ne2)
+      yield Expr.Pair(ne1, ne2)
 }

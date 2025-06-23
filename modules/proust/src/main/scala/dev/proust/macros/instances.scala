@@ -43,7 +43,8 @@ object instances {
   given ToExpr[TypeExpr] with
     def apply(expr: TypeExpr)(using Quotes): Expr[TypeExpr] =
       expr match
-        case TypeExpr.Var(name)          => '{ TypeExpr.Var(${ Expr(name) }) }
-        case TypeExpr.Function(from, to) => '{ TypeExpr.Function(${ Expr(from) }, ${ Expr(to) }) }
-        case TypeExpr.Pair(t1, t2)       => '{ TypeExpr.Pair(${ Expr(t1) }, ${ Expr(t2) }) }
+        case TypeExpr.Var(name)           => '{ TypeExpr.Var(${ Expr(name) }) }
+        case TypeExpr.Function(from, to)  => '{ TypeExpr.Function(${ Expr(from) }, ${ Expr(to) }) }
+        case TypeExpr.Pair(t1, t2)        => '{ TypeExpr.Pair(${ Expr(t1) }, ${ Expr(t2) }) }
+        case TypeExpr.Disjunction(t1, t2) => '{ TypeExpr.Disjunction(${ Expr(t1) }, ${ Expr(t2) }) }
 }
