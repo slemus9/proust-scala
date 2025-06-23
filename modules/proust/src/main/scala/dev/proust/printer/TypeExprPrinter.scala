@@ -5,6 +5,9 @@ import dev.proust.lang.TypeExpr
 object TypeExprPrinter extends CorePrinters {
 
   def print(_type: TypeExpr): String = _type match
+    case TypeExpr.Empty =>
+      TypeExpr.EmptyOps.Name
+
     case TypeExpr.Var(name) =>
       name
 
@@ -15,5 +18,5 @@ object TypeExprPrinter extends CorePrinters {
       s"(${print(t1).inParensIf(t1.isRecursive)}, ${print(t2).inParensIf(t2.isRecursive)})"
 
     case TypeExpr.Disjunction(t1, t2) =>
-      s"Either ${print(t1).inParensIf(t1.isRecursive)} ${print(t2).inParensIf(t2.isRecursive)}"
+      s"${TypeExpr.Disjunction.Name} ${print(t1).inParensIf(t1.isRecursive)} ${print(t2).inParensIf(t2.isRecursive)}"
 }

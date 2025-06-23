@@ -32,30 +32,37 @@ object Expr {
 
   object Pair {
     object First {
-      val FunName                           = "first"
-      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+      val Name                              = "first"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(Name, expr)
     }
 
     object Second {
-      val FunName                           = "second"
-      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+      val Name                              = "second"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(Name, expr)
     }
   }
 
   object Disjunction {
     object Left {
-      val FunName                           = "left"
-      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+      val Name                              = "left"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(Name, expr)
     }
 
     object Right {
-      val FunName                           = "right"
-      def unapply(expr: Expr): Option[Expr] = unaryPattern(FunName, expr)
+      val Name                              = "right"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(Name, expr)
     }
 
-    object Fold {
-      val FunName                                         = "foldEither"
-      def unapply(expr: Expr): Option[(Expr, Expr, Expr)] = ternaryPattern(FunName, expr)
+    object Elim {
+      val Name                                            = "elimEither"
+      def unapply(expr: Expr): Option[(Expr, Expr, Expr)] = ternaryPattern(Name, expr)
+    }
+  }
+
+  object Empty {
+    object Elim {
+      val Name                              = "elimEmpty"
+      def unapply(expr: Expr): Option[Expr] = unaryPattern(Name, expr)
     }
   }
 
@@ -65,17 +72,31 @@ object Expr {
 }
 
 enum TypeExpr {
+  case Empty
   case Var(name: Identifier)
   case Function(from: TypeExpr, to: TypeExpr)
   case Pair(first: TypeExpr, second: TypeExpr)
   case Disjunction(left: TypeExpr, right: TypeExpr)
 
   def isRecursive: Boolean = this match
-    case _: Var => false
-    case _      => true
+    case _: (Var | Empty.type) => false
+    case _                     => true
 }
 
 object TypeExpr {
+
+  object EmptyOps { // can't name this object "Empty"
+    val Name = "Empty"
+  }
+
+  object Disjunction {
+    val Name = "Either"
+  }
+
+  object Negation {
+    val Name                             = "!"
+    def apply(_type: TypeExpr): TypeExpr = Function(_type, Empty)
+  }
 
   given Eq[TypeExpr] = semiauto.eq
 }
