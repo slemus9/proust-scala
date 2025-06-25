@@ -2,7 +2,7 @@ package dev.proust.printer
 
 import dev.proust.lang.Expr
 
-object ExprPrinter extends CorePrinters {
+object ExprPrinter {
 
   def print(expr: Expr): String = expr match
     case Expr.Var(name) =>
