@@ -5,7 +5,7 @@ import dev.proust.lang.Expr
 import dev.proust.lang.GoalNumber
 
 trait ExprParsers {
-  self: CoreParsers & TypeExprParsers =>
+  self: TypeExprParsers =>
 
   def annotatedExpr: Parser[Expr] =
     Parser.defer(annotated(expr))
