@@ -2,7 +2,7 @@ package dev.proust.printer
 
 import dev.proust.lang.TypeExpr
 
-object TypeExprPrinter extends CorePrinters {
+object TypeExprPrinter {
 
   def print(_type: TypeExpr): String = _type match
     case TypeExpr.Empty =>

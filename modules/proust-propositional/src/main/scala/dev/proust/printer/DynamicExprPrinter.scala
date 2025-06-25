@@ -4,7 +4,7 @@ import cats.Show
 import dev.proust.lang.DynamicExpr
 import dev.proust.lang.Expr
 
-object DynamicExprPrinter extends CorePrinters {
+object DynamicExprPrinter {
 
   def print(dyn: DynamicExpr): String =
 
