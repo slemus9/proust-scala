@@ -1,5 +1,7 @@
 import org.typelevel.sbt.tpolecat.DevMode
 
+import Dependencies.*
+
 inThisBuild(
   Seq(
     scalaVersion               := "3.6.4",
@@ -11,18 +13,48 @@ inThisBuild(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(proust)
+  .aggregate(
+    proustCommon,
+    proustPropositional,
+    proustPredicate
+  )
 
-lazy val proust = project
-  .in(file("modules/proust"))
+/**
+  * Chapter 2
+  */
+lazy val proustPropositional = project
+  .in(file("modules/proust-propositional"))
+  .dependsOn(proustCommon)
   .settings(
     libraryDependencies ++= Seq(
-      "org.typelevel"       %% "cats-core"   % "2.13.0",
-      "org.typelevel"       %% "cats-effect" % "3.6.1",
-      "org.typelevel"       %% "cats-mtl"    % "1.5.0",
-      "org.typelevel"       %% "cats-parse"  % "1.1.0",
-      "org.typelevel"       %% "kittens"     % "3.5.0",
-      "io.github.iltotore"  %% "iron"        % "3.0.0",
-      "com.disneystreaming" %% "weaver-cats" % "0.8.4" % Test
+      catsEffect,
+      catsMtl,
+      kittens,
+      weaver % Test
+    )
+  )
+
+/**
+  * Chapter 3
+  */
+lazy val proustPredicate = project
+  .in(file("modules/proust-predicate"))
+  .dependsOn(proustCommon)
+  .settings(
+    libraryDependencies ++= Seq(
+      weaver % Test
+    )
+  )
+
+/**
+  * Common definitions and utilities
+  */
+lazy val proustCommon = project
+  .in(file("modules/proust-common"))
+  .settings(
+    libraryDependencies ++= Seq(
+      cats,
+      catsParse,
+      iron
     )
   )

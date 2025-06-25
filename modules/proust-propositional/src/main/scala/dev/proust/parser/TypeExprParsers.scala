@@ -5,7 +5,6 @@ import cats.syntax.all.*
 import dev.proust.lang.TypeExpr
 
 trait TypeExprParsers {
-  self: CoreParsers =>
 
   def typeExpr: Parser[TypeExpr] =
     baseTypeExpr.repSep(matching("->")).map { types =>
