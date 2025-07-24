@@ -1,6 +1,7 @@
 package dev.proust.predicate.lang
 
 import dev.proust.lang.Identifier
+import dev.proust.predicate.macros.ExprStringOps
 
 enum Expr {
   self =>
@@ -18,6 +19,9 @@ enum Expr {
 }
 
 object Expr {
+
+  inline def apply(inline str: String): Expr =
+    ExprStringOps.proustExprStr(str)
 
   type TypeExpr = Var | Arrow | Type.type
 }
