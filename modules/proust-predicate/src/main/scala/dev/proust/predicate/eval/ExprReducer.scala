@@ -1,5 +1,6 @@
 package dev.proust.predicate.eval
 
+import dev.proust.lang.Identifier
 import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.lang.Substitution.substitute
 
@@ -11,11 +12,10 @@ object ExprReducer {
       case expr: Expr.Var        => expr
       case Expr.Lambda(x, e)     => Expr.Lambda(x, e.reduce)
       case Expr.Arrow(x, t1, t2) => Expr.Arrow(x, t1.reduce, t2.reduce)
-      case Expr.Annotate(e, t)   => Expr.Annotate(e.reduce, t.reduce)
+      case Expr.Annotate(e, t)   => e.reduce
       case Expr.Apply(f, arg)    =>
         f.reduce match
           case Expr.Lambda(x, e) => e.substitute(x, arg.reduce)
           case f                 => Expr.Apply(f, arg.reduce)
   }
-
 }

@@ -82,6 +82,17 @@ object SubstitutionTests extends FunSuite {
     )
   }
 
+  test("Ignored bindings should not affect substitution on Lambdas") {
+    val expr = Expr("\\x _ y _ z -> t y x")
+    val y    = Identifier("t")
+    val s    = Expr("\\y _ x -> x")
+
+    expect.same(
+      expr.substitute(y, s),
+      Expr("\\x _ y _ z -> (\\y _ x -> x) y x")
+    )
+  }
+
   test("Arrow(x, t1, t2).substitute(x, t1, t2) == Arrow(x, t1, t2)") {
     val expr = Expr("(x, y, z: A) -> B z y x")
     val y    = Identifier("x")
@@ -123,6 +134,17 @@ object SubstitutionTests extends FunSuite {
     val z        = Identifier("x#1")
     val range    = Expr("(y: A) -> (z: B ((m: M) -> m x) toReplace) -> C (y toReplace) ((m: M) -> m x)")
     val expected = Expr.Arrow(z, Expr.Var(Identifier("A")), range.substitute(Identifier("toReplace"), Expr.Var(z)))
+
+    expect.same(expected, expr.substitute(y, s))
+  }
+
+  test("Ignored bindings should not affect substitution on Arrows") {
+    val expr     = Expr("(x, y: A) -> T1 -> (z: B a x) -> T2 -> C y a")
+    val y        = Identifier("a")
+    val s        = Expr("(b, x : D) -> T3 -> D x b")
+    val expected = Expr(
+      "(x, y: A) -> T1 -> (z: B ((b, x : D) -> T3 -> D x b) x) -> T2 -> C y ((b, x : D) -> T3 -> D x b)"
+    )
 
     expect.same(expected, expr.substitute(y, s))
   }
