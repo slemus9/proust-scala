@@ -26,8 +26,8 @@ object Substitution {
     case expr: Expr.Var         => expr.pure
     case expr: Expr.Lambda      => substLambda(expr, y, s)
     case expr: Expr.Arrow       => substArrow(expr, y, s)
-    case Expr.Apply(f, arg)     => continueSubst(y, s)(f, arg)(Expr.Apply.apply)
-    case Expr.Annotate(e, t)    => continueSubst(y, s)(e, t)(Expr.Annotate.apply)
+    case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
+    case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
 
   private def substLambda(
       lambda: Expr.Lambda,
@@ -36,7 +36,7 @@ object Substitution {
   ): State[NamingContext, Expr] = lambda match
     case Expr.Lambda(x, _) if x === y => lambda.pure
 
-    case Expr.Lambda(x, e) if !isFree(s, x) =>
+    case Expr.Lambda(x, e) if x === Expr.IgnoredBinding || !isFree(s, x) =>
       subst(e, y, s).map(Expr.Lambda(x, _))
 
     case Expr.Lambda(x, e) =>
@@ -52,11 +52,8 @@ object Substitution {
   ): State[NamingContext, Expr] = arrow match
     case Expr.Arrow(x, _, _) if x === y => arrow.pure
 
-    case Expr.Arrow(x, t1, t2) if !isFree(s, x) =>
-      for
-        w1 <- subst(t1, y, s)
-        w2 <- subst(t2, y, s)
-      yield Expr.Arrow(x, w1, w2)
+    case Expr.Arrow(x, t1, t2) if x === Expr.IgnoredBinding || !isFree(s, x) =>
+      binarySubst(y, s)(t1, t2)(Expr.Arrow(x, _, _))
 
     case Expr.Arrow(x, t1, t2) =>
       for
@@ -68,7 +65,7 @@ object Substitution {
   private def renameVar(expr: Expr, originalName: Identifier, newName: Identifier): State[NamingContext, Expr] =
     subst(expr, originalName, Expr.Var(newName))
 
-  private def continueSubst(y: Identifier, s: Expr)(
+  private def binarySubst(y: Identifier, s: Expr)(
       e1: Expr,
       e2: Expr
   )(constructor: (Expr, Expr) => Expr): State[NamingContext, Expr] =

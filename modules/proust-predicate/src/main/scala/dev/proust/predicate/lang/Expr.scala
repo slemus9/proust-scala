@@ -20,6 +20,8 @@ enum Expr {
 
 object Expr {
 
+  val IgnoredBinding = Identifier("_")
+
   inline def apply(inline str: String): Expr =
     ExprStringOps.proustExprStr(str)
 

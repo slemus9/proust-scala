@@ -22,7 +22,7 @@ object ExprParser {
     }
 
   private val functionParam: Parser[Identifier] =
-    identifier | matching('_').as(Identifier("_"))
+    identifier | matching(Expr.IgnoredBinding.value).as(Expr.IgnoredBinding)
 
   private def annotatedExpr: Parser[Expr] =
     annotated(expr)
