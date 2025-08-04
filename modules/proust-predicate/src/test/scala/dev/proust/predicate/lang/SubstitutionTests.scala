@@ -1,6 +1,7 @@
 package dev.proust.predicate.lang
 
 import dev.proust.lang.Identifier
+import dev.proust.predicate.lang.AlphaEquivalence.given
 import dev.proust.predicate.lang.Substitution.substitute
 import dev.proust.predicate.printer.ExprPrinter.given
 import weaver.FunSuite
@@ -69,17 +70,12 @@ object SubstitutionTests extends FunSuite {
       "if x is free in s, and z is a fresh name that does not appear in e, " +
       "and is not free in s"
   ) {
-    val expr     = Expr("\\x y z -> y (t z (x t)) (x t)")
+    val expr     = Expr("\\x y a -> y (t a (x t)) (x t)")
     val y        = Identifier("t")
-    val z        = Identifier("x#1")
     val s        = Expr("\\y t -> t x")
-    val body     = Expr("\\y z -> y ((\\y t -> t x) z (a (\\y t -> t x))) (a (\\y t -> t x))")
-    val expected = Expr.Lambda(z, body.substitute(Identifier("a"), Expr.Var(z)))
+    val expected = Expr("\\z y a -> y ((\\y t -> t x) a (z (\\y t -> t x))) (z (\\y t -> t x))")
 
-    expect.same(
-      expr.substitute(y, s),
-      expected
-    )
+    expect.same(expr.substitute(y, s), expected)
   }
 
   test("Ignored bindings should not affect substitution on Lambdas") {
@@ -128,12 +124,10 @@ object SubstitutionTests extends FunSuite {
       "if x is free in s, and z is a fresh name that does not appear in e, " +
       "and is not free in s"
   ) {
-    val expr     = Expr("(x, y: A) -> (z: B a x) -> C (y x) a")
+    val expr     = Expr("(x, y: A) -> (b: B a x) -> C (y x) a")
     val y        = Identifier("a")
     val s        = Expr("(m: M) -> m x")
-    val z        = Identifier("x#1")
-    val range    = Expr("(y: A) -> (z: B ((m: M) -> m x) toReplace) -> C (y toReplace) ((m: M) -> m x)")
-    val expected = Expr.Arrow(z, Expr.Var(Identifier("A")), range.substitute(Identifier("toReplace"), Expr.Var(z)))
+    val expected = Expr("(z, y: A) -> (b: B ((m: M) -> m x) z) -> C (y z) ((m: M) -> m x)")
 
     expect.same(expected, expr.substitute(y, s))
   }
