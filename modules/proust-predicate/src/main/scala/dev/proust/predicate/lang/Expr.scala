@@ -6,11 +6,11 @@ import dev.proust.predicate.macros.ExprStringOps
 enum Expr {
   self =>
 
-  case Type                        // The type of all valid types
+  case Type                                                // The type of all valid types
   case Var(name: Identifier)
   case Lambda(param: Identifier, body: Expr)
   case Apply(function: Expr, arg: Expr)
-  case Arrow(from: Expr, to: Expr) // The type of a function
+  case Arrow(param: Identifier, domain: Expr, range: Expr) // Dependent Function Type
   case Annotate(expr: Expr, _type: Expr)
 
   def isRecursive: Boolean = self match
@@ -19,6 +19,8 @@ enum Expr {
 }
 
 object Expr {
+
+  val IgnoredBinding = Identifier("_")
 
   inline def apply(inline str: String): Expr =
     ExprStringOps.proustExprStr(str)

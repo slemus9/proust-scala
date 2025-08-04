@@ -16,10 +16,10 @@ object instances {
   given ToExpr[ProustExpr] with
     def apply(expr: ProustExpr)(using Quotes): Expr[ProustExpr] =
       expr match
-        case ProustExpr.Type           => '{ ProustExpr.Type }
-        case ProustExpr.Var(x)         => '{ ProustExpr.Var(${ Expr(x) }) }
-        case ProustExpr.Lambda(x, e)   => '{ ProustExpr.Lambda(${ Expr(x) }, ${ Expr(e) }) }
-        case ProustExpr.Arrow(t1, t2)  => '{ ProustExpr.Arrow(${ Expr(t1) }, ${ Expr(t2) }) }
-        case ProustExpr.Annotate(e, t) => '{ ProustExpr.Annotate(${ Expr(e) }, ${ Expr(t) }) }
-        case ProustExpr.Apply(f, arg)  => '{ ProustExpr.Apply(${ Expr(f) }, ${ Expr(arg) }) }
+        case ProustExpr.Type             => '{ ProustExpr.Type }
+        case ProustExpr.Var(x)           => '{ ProustExpr.Var(${ Expr(x) }) }
+        case ProustExpr.Lambda(x, e)     => '{ ProustExpr.Lambda(${ Expr(x) }, ${ Expr(e) }) }
+        case ProustExpr.Arrow(x, t1, t2) => '{ ProustExpr.Arrow(${ Expr(x) }, ${ Expr(t1) }, ${ Expr(t2) }) }
+        case ProustExpr.Annotate(e, t)   => '{ ProustExpr.Annotate(${ Expr(e) }, ${ Expr(t) }) }
+        case ProustExpr.Apply(f, arg)    => '{ ProustExpr.Apply(${ Expr(f) }, ${ Expr(arg) }) }
 }

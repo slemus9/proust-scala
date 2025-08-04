@@ -16,7 +16,7 @@ object TypeChecker {
       expr: Expr,
       _type: Expr
   ): Either[TypeError, Expr] = (expr, _type) match
-    case (Expr.Lambda(x, expr), Expr.Arrow(t1, t2)) =>
+    case (Expr.Lambda(x, expr), Expr.Arrow(_, t1, t2)) =>
       checkExpr(context, _type, Expr.Type) >> checkExpr(context + (x -> t1), expr, t2)
 
     case (expr, t1) =>
@@ -37,8 +37,8 @@ object TypeChecker {
 
     case Expr.Apply(f, arg) =>
       synthExpr(context, f).flatMap {
-        case Expr.Arrow(t1, t2) => checkExpr(context, arg, t1).as(t2)
-        case _                  => TypeSynthError(expr).raiseError
+        case Expr.Arrow(x, t1, t2) => checkExpr(context, arg, t1).as(t2)
+        case _                     => TypeSynthError(expr).raiseError
       }
 
   def synthWellFormedness(
@@ -50,7 +50,7 @@ object TypeChecker {
     case Expr.Var(name) =>
       context.getOrElse(name, Expr.Type).pure // Temporarily assume it's a Type if it's not in the context
 
-    case Expr.Arrow(t1, t2) =>
+    case Expr.Arrow(_, t1, t2) =>
       (
         checkExpr(context, t1, Expr.Type),
         checkExpr(context, t2, Expr.Type)
