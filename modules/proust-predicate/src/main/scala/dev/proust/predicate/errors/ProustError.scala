@@ -26,3 +26,8 @@ final class TypeSynthError(expr: Expr) extends TypeError {
   override val getMessage: String =
     s"Could not infer the type of the expression:\n\t${expr.show}"
 }
+
+final class TypeMismatchError(expr: Expr, expectedType: Expr, actualType: Expr) extends TypeError {
+  override val getMessage: String =
+    s"Type mismatch for expression:\n\t${expr.show}\nExpected type:\n\t${expectedType.show}\nBut received: ${actualType.show}"
+}

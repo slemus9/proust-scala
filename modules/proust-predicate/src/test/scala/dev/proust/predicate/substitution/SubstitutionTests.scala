@@ -1,19 +1,27 @@
-package dev.proust.predicate.lang
+package dev.proust.predicate.substitution
 
 import dev.proust.lang.Identifier
 import dev.proust.predicate.lang.AlphaEquivalence.given
-import dev.proust.predicate.lang.Substitution.substitute
+import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.printer.ExprPrinter.given
 import weaver.FunSuite
 
 object SubstitutionTests extends FunSuite {
+
+  given NamingContext[NamingContext.NamingState]            = StatefulNamingContext[NamingContext.NamingState]
+  private val subs: Substitution[NamingContext.NamingState] = SubstitutionImpl[NamingContext.NamingState]
+
+  extension (expr: Expr) {
+    def substitute(y: Identifier, s: Expr): Expr =
+      subs.substitute(expr)(y, s).runA(Map.empty).value
+  }
 
   test("x.substitute(x, s) == s") {
     val x = Expr("x")
     val y = Identifier("x")
     val s = Expr("\\y x -> f x (\\z -> y)")
 
-    expect.same(x.substitute(y, s), s)
+    expect.eql(x.substitute(y, s), s)
   }
 
   test("x.substitute(y, s) == x") {
@@ -21,7 +29,7 @@ object SubstitutionTests extends FunSuite {
     val y = Identifier("y")
     val s = Expr("\\y x -> f x (\\z -> y)")
 
-    expect.same(x.substitute(y, s), x)
+    expect.eql(x.substitute(y, s), x)
   }
 
   test("Apply(f, arg).substitute(y, s) == Apply(f.substitute(y, s), arg.substitute(y, s))") {
@@ -29,7 +37,7 @@ object SubstitutionTests extends FunSuite {
     val y    = Identifier("y")
     val s    = Expr("\\x -> x")
 
-    expect.same(
+    expect.eql(
       expr.substitute(y, s),
       Expr("f (((\\x -> x) z) ((\\x -> x) a)) (f (\\x -> x) z)")
     )
@@ -40,7 +48,7 @@ object SubstitutionTests extends FunSuite {
     val y    = Identifier("x")
     val s    = Expr("\\y x -> f x (\\z -> y)")
 
-    expect.same(expr.substitute(y, s), expr)
+    expect.eql(expr.substitute(y, s), expr)
   }
 
   test("Lambda(x, e).substitute(y, s) == Lambda(x, e.substitute(y, s)) if x does not appear in s") {
@@ -48,7 +56,7 @@ object SubstitutionTests extends FunSuite {
     val y    = Identifier("t")
     val s    = Expr("\\y t -> t")
 
-    expect.same(
+    expect.eql(
       expr.substitute(y, s),
       Expr("\\x y z -> (\\y t -> t) y x")
     )
@@ -59,7 +67,7 @@ object SubstitutionTests extends FunSuite {
     val y    = Identifier("t")
     val s    = Expr("\\y x -> x")
 
-    expect.same(
+    expect.eql(
       expr.substitute(y, s),
       Expr("\\x y z -> (\\y x -> x) y x")
     )
@@ -75,7 +83,7 @@ object SubstitutionTests extends FunSuite {
     val s        = Expr("\\y t -> t x")
     val expected = Expr("\\z y a -> y ((\\y t -> t x) a (z (\\y t -> t x))) (z (\\y t -> t x))")
 
-    expect.same(expr.substitute(y, s), expected)
+    expect.eql(expr.substitute(y, s), expected)
   }
 
   test("Ignored bindings should not affect substitution on Lambdas") {
@@ -83,7 +91,7 @@ object SubstitutionTests extends FunSuite {
     val y    = Identifier("t")
     val s    = Expr("\\y _ x -> x")
 
-    expect.same(
+    expect.eql(
       expr.substitute(y, s),
       Expr("\\x _ y _ z -> (\\y _ x -> x) y x")
     )
@@ -94,7 +102,7 @@ object SubstitutionTests extends FunSuite {
     val y    = Identifier("x")
     val s    = Expr("C a")
 
-    expect.same(expr, expr.substitute(y, s))
+    expect.eql(expr, expr.substitute(y, s))
   }
 
   test(
@@ -105,7 +113,7 @@ object SubstitutionTests extends FunSuite {
     val s        = Expr("(b, a : D) -> D a b")
     val expected = Expr("(x, y: A) -> (z: B ((b, a : D) -> D a b) x) -> C y ((b, a : D) -> D a b)")
 
-    expect.same(expected, expr.substitute(y, s))
+    expect.eql(expected, expr.substitute(y, s))
   }
 
   test(
@@ -116,7 +124,7 @@ object SubstitutionTests extends FunSuite {
     val s        = Expr("(b, x : D) -> D x b")
     val expected = Expr("(x, y: A) -> (z: B ((b, x : D) -> D x b) x) -> C y ((b, x : D) -> D x b)")
 
-    expect.same(expected, expr.substitute(y, s))
+    expect.eql(expected, expr.substitute(y, s))
   }
 
   test(
@@ -129,7 +137,7 @@ object SubstitutionTests extends FunSuite {
     val s        = Expr("(m: M) -> m x")
     val expected = Expr("(z, y: A) -> (b: B ((m: M) -> m x) z) -> C (y z) ((m: M) -> m x)")
 
-    expect.same(expected, expr.substitute(y, s))
+    expect.eql(expected, expr.substitute(y, s))
   }
 
   test("Ignored bindings should not affect substitution on Arrows") {
@@ -140,6 +148,6 @@ object SubstitutionTests extends FunSuite {
       "(x, y: A) -> T1 -> (z: B ((b, x : D) -> T3 -> D x b) x) -> T2 -> C y ((b, x : D) -> T3 -> D x b)"
     )
 
-    expect.same(expected, expr.substitute(y, s))
+    expect.eql(expected, expr.substitute(y, s))
   }
 }

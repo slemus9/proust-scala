@@ -26,6 +26,6 @@ object AlphaEquivalenceTests extends FunSuite {
     val e1 = Expr("(x, y, z : A) -> (b : B) -> (\\f -> f x z) y")
     val e2 = Expr("(a, b2, c3 : A) -> (g : B) -> (\\h -> h a c3) b2")
 
-    expect.same(e1, e2)
+    expect.eql(e1, e2)
   }
 }
