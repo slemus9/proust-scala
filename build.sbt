@@ -42,6 +42,7 @@ lazy val proustPredicate = project
   .dependsOn(proustCommon)
   .settings(
     libraryDependencies ++= Seq(
+      catsMtl,
       weaver % Test
     )
   )
