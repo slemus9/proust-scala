@@ -1,5 +1,6 @@
 package dev.proust.predicate.eval
 
+import dev.proust.lang.Identifier
 import dev.proust.predicate.lang.AlphaEquivalence.given
 import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.substitution.NamingContext
@@ -17,15 +18,16 @@ object ExprReducerTests extends FunSuite {
     ExprReducerImpl[NamingContext.NamingState]
 
   extension (expr: Expr) {
-    def reduce: Expr =
-      reducer.reduce(expr).runA(Map.empty).value
+    def reduce(bindings: Map[Identifier, Expr]): Expr =
+      reducer.reduce(expr)(bindings).runA(Map.empty).value
   }
 
   test("reducing function applications should substitute the parameter by its argument in the body of the lambda") {
     val expr     = Expr("(\\x y -> (\\z -> z) y) t1 t2")
-    val expected = Expr("t2")
+    val expected = Expr("\\x -> t3 x")
+    val bindings = Map(Identifier("t2") -> Expr("\\x -> t3 x"))
 
-    expect.eql(expected, expr.reduce)
+    expect.eql(expected, expr.reduce(bindings))
   }
 
 }
