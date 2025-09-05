@@ -15,6 +15,9 @@ object ExprParser {
   def parseExpr(str: String): Either[ParseError, Expr] =
     (whitespace *> annotatedExpr).parseAll(str).left.map(ParseError.apply)
 
+  def expr: Parser[Expr] =
+    Parser.defer(lambda | arrow.backtrack | application | baseExpr)
+
   private val variable: Parser[Expr] =
     identifier.map {
       case "Type" => Expr.Type
@@ -26,9 +29,6 @@ object ExprParser {
 
   private def annotatedExpr: Parser[Expr] =
     annotated(expr)
-
-  private def expr: Parser[Expr] =
-    Parser.defer(lambda | arrow.backtrack | application | baseExpr)
 
   private def baseExpr: Parser[Expr] =
     Parser.defer(variable | annotatedExpr.inParens)
