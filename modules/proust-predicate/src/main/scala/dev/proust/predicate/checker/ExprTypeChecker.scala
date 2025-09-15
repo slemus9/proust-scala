@@ -1,7 +1,9 @@
 package dev.proust.predicate.checker
 
+import cats.mtl.Tell
 import cats.MonadThrow
 import dev.proust.predicate.checker.impl.ExprTypeCheckerImpl
+import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.eval.ExprReducer
 import dev.proust.predicate.eval.ExprReducerImpl
 import dev.proust.predicate.lang.Expr
@@ -34,7 +36,7 @@ trait ExprTypeChecker[F[_]] extends ExprTypeSynthesizer[F] {
 
 object ExprTypeChecker {
 
-  def apply[F[_]: MonadThrow](using NamingContext[F]): ExprTypeChecker[F] =
+  def apply[F[_]: MonadThrow](using NamingContext[F], Tell[F, TypeCheckSteps]): ExprTypeChecker[F] =
     given Substitution[F] = SubstitutionImpl[F]
     given ExprReducer[F]  = ExprReducerImpl[F]
     ExprTypeCheckerImpl[F]

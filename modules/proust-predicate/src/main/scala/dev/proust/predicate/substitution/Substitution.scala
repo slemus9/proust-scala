@@ -1,8 +1,12 @@
 package dev.proust.predicate.substitution
 
+import cats.data.Chain
+import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.Monad
 import dev.proust.lang.Identifier
+import dev.proust.predicate.checker.steps.TypeCheckStep
+import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.lang.Expr
 
 trait Substitution[F[_]] {
@@ -25,19 +29,27 @@ trait Substitution[F[_]] {
   }
 }
 
-final class SubstitutionImpl[F[_]: Monad](using naming: NamingContext[F]) extends Substitution[F] {
+final class SubstitutionImpl[F[_]: Monad](using
+    naming: NamingContext[F],
+    log: Tell[F, TypeCheckSteps]
+) extends Substitution[F] {
 
   extension (expr: Expr) {
     override def substitute(y: Identifier, s: Expr): F[Expr] =
-      expr match
-        case Expr.Type              => Expr.Type.pure
-        case Expr.Var(x) if x === y => s.pure
-        case expr: Expr.Var         => expr.pure
-        case expr: Expr.Lambda      => substLambda(expr, y, s)
-        case expr: Expr.Arrow       => substArrow(expr, y, s)
-        case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
-        case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
+      logStep(expr, y, s) *> {
+        expr match
+          case Expr.Type              => Expr.Type.pure
+          case Expr.Var(x) if x === y => s.pure
+          case expr: Expr.Var         => expr.pure
+          case expr: Expr.Lambda      => substLambda(expr, y, s)
+          case expr: Expr.Arrow       => substArrow(expr, y, s)
+          case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
+          case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
+      }
   }
+
+  private def logStep(expr: Expr, y: Identifier, s: Expr): F[Unit] =
+    log.tell(Chain.one(TypeCheckStep.Substitute(expr, y, s)))
 
   private def substLambda(
       lambda: Expr.Lambda,

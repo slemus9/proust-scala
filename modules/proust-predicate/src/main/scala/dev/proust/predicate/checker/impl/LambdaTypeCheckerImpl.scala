@@ -37,7 +37,7 @@ private[checker] trait LambdaTypeCheckerImpl[F[_]: Monad](using naming: NamingCo
           e2 <- checkExpr(context.addType(z, t), e1, w1)
         yield e2
     }
-  ) as lambda
+  ) as arrow
 
   private def checkLambdaWithIgnoredBindings(context: TypeCheckerContext): PartialFunction[(Lambda, Arrow), F[Expr]] = {
     case (Lambda(IgnoredBinding, e), Arrow(IgnoredBinding, _, t)) =>

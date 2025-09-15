@@ -10,6 +10,10 @@ object Dependencies {
 
   val catsParse = "org.typelevel" %% "cats-parse" % "1.1.0"
 
+  val fs2 = "co.fs2" %% "fs2-core" % "3.12.0"
+
+  val fs2io = "co.fs2" %% "fs2-io" % "3.12.0"
+
   val iron = "io.github.iltotore" %% "iron" % "3.0.0"
 
   val kittens = "org.typelevel" %% "kittens" % "3.5.0"

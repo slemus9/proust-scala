@@ -32,6 +32,8 @@ object TypeCheckerContext {
 
     extension (context: TypeContext) {
 
+      def value: List[(Identifier, Expr)] = context
+
       def has(x: Identifier): Boolean =
         context.exists((y, _) => x === y)
 

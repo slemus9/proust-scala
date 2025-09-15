@@ -42,9 +42,13 @@ lazy val proustPredicate = project
   .dependsOn(proustCommon)
   .settings(
     libraryDependencies ++= Seq(
+      catsEffect,
       catsMtl,
+      fs2,
+      fs2io,
       weaver % Test
-    )
+    ),
+    Compile / run / fork := true
   )
 
 /**

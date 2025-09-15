@@ -1,10 +1,15 @@
 package dev.proust.predicate.checker.impl
 
+import cats.data.Chain
+import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.MonadThrow
+import dev.proust.predicate.checker.steps.TypeCheckStep
+import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.checker.ExprTypeChecker
 import dev.proust.predicate.checker.ExprTypeSynthesizer
 import dev.proust.predicate.checker.TypeCheckerContext
+import dev.proust.predicate.errors.ExpectedFunctionTypeError
 import dev.proust.predicate.errors.TypeSynthError
 import dev.proust.predicate.eval.ExprReducer
 import dev.proust.predicate.lang.Expr
@@ -14,14 +19,25 @@ import dev.proust.predicate.substitution.Substitution
   * Mixing module that specializes in synthesizing the types of expressions
   */
 private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
-    Substitution[F],
-    ExprReducer[F]
+    subst: Substitution[F],
+    eval: ExprReducer[F],
+    log: Tell[F, TypeCheckSteps]
 ) extends ExprTypeSynthesizer[F] {
   self: ExprTypeChecker[F] =>
 
   import Expr.*
 
   override final def synthType(
+      context: TypeCheckerContext,
+      expr: Expr
+  ): F[Expr] =
+    for
+      _     <- log.tell(Chain.one(TypeCheckStep.SynthType(context.types, expr)))
+      _type <- synthForExpr(context, expr)
+      _     <- log.tell(Chain.one(TypeCheckStep.TypeSynthesized(expr, _type)))
+    yield _type
+
+  private def synthForExpr(
       context: TypeCheckerContext,
       expr: Expr
   ): F[Expr] = expr match
@@ -49,9 +65,12 @@ private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
   private def synthApplication(
       context: TypeCheckerContext,
       app: Apply
-  ): F[Expr] = app.function.reduce(context.bindings).flatMap {
-    case Arrow(IgnoredBinding, t, w) => checkExpr(context, app.arg, t) as w
-    case Arrow(x, t, w)              => checkExpr(context, app.arg, t) >> w.substitute(x, app.arg)
-    case expr                        => TypeSynthError(expr).raiseError
-  }
+  ): F[Expr] =
+    synthType(context, app.function)
+      .flatMap(_.reduce(context.bindings))
+      .flatMap {
+        case Arrow(IgnoredBinding, t, w) => checkExpr(context, app.arg, t) as w
+        case Arrow(x, t, w)              => checkExpr(context, app.arg, t) >> w.substitute(x, app.arg)
+        case expr                        => ExpectedFunctionTypeError(app).raiseError
+      }
 }

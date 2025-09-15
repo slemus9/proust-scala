@@ -1,0 +1,20 @@
+Bool : Type;
+Bool = (X : Type) -> X -> X -> X;
+
+true : Bool;
+true = \_ x _ -> x;
+
+false : Bool;
+false = \_ _ y -> y;
+
+if : (X : Type) -> Bool -> X -> X -> X;
+if = \X b -> b X;
+
+and : Bool -> Bool -> Bool;
+and = \b1 b2 -> if Bool b1 true b2;
+
+Pair : Type -> Type -> Type;
+Pair = \P Q -> (C : Type) -> (P -> Q -> C) -> C;
+
+pair : (P, Q : Type) -> P -> Q -> Pair P Q;
+pair = \_ _ p q _ elim -> elim p q;
