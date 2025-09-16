@@ -1,6 +1,7 @@
 package dev.proust.predicate.lang
 
-import cats.syntax.eq.*
+import cats.syntax.all.*
+import cats.Eval
 import dev.proust.lang.Identifier
 import dev.proust.predicate.macros.ExprStringOps
 
@@ -34,5 +35,22 @@ object Expr {
   inline def apply(inline str: String): Expr =
     ExprStringOps.proustExprStr(str)
 
-  type TypeExpr = Var | Arrow | Type.type
+  /**
+    * Convenience object to manipulate chains of function application
+    */
+  object ApplyMany {
+    def apply(expr: Expr, exprs: Expr*): Expr =
+      exprs.foldLeft(expr)(Apply.apply)
+
+    def unapplySeq(expr: Expr): Option[Seq[Expr]] =
+      expr match
+        case expr: Apply => Some(accumExprs(expr).value)
+        case _           => None
+
+    // We use Eval for stack-safety
+    private def accumExprs(expr: Expr): Eval[List[Expr]] =
+      expr match
+        case Apply(f, x) => (accumExprs(f), accumExprs(x)).mapN(_ ++ _)
+        case expr        => Eval.always(List(expr))
+  }
 }
