@@ -1,7 +1,9 @@
 package dev.proust.predicate.checker.impl
 
+import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.MonadThrow
+import dev.proust.predicate.checker.steps.TypeCheckStep
 import dev.proust.predicate.checker.ExprTypeChecker
 import dev.proust.predicate.checker.TypeCheckerContext
 import dev.proust.predicate.errors.TypeMismatchError
@@ -12,9 +14,10 @@ import dev.proust.predicate.substitution.NamingContext
 import dev.proust.predicate.substitution.Substitution
 
 private[checker] final class ExprTypeCheckerImpl[F[_]: MonadThrow](using
-    NamingContext[F],
-    Substitution[F],
-    ExprReducer[F]
+    naming: NamingContext[F],
+    subst: Substitution[F],
+    eval: ExprReducer[F],
+    log: Tell[F, TypeCheckStep]
 ) extends ExprTypeChecker[F],
       LambdaTypeCheckerImpl[F],
       ExprTypeSynthesizerImpl[F] {
@@ -26,14 +29,26 @@ private[checker] final class ExprTypeCheckerImpl[F[_]: MonadThrow](using
       expr: Expr,
       _type: Expr
   ): F[Expr] =
-    _type.reduce(context.bindings).tupleLeft(expr).flatMap {
-      case (expr: Lambda, _type: Arrow) => checkLambda(context, expr, _type)
-      case (expr, t)                    =>
-        synthType(context, expr)
-          .flatMap(_.reduce(context.bindings))
-          .flatMap {
-            case w if t === w => expr.pure
-            case w            => TypeMismatchError(expr, t, w).raiseError
-          }
-    }
+    _type
+      .reduce(context.bindings)
+      .tupleLeft(expr)
+      .flatTap((expr, _type) => logStep(context, expr, _type))
+      .flatMap {
+        case (expr: Lambda, _type: Arrow) => checkLambda(context, expr, _type)
+        case (expr, t)                    =>
+          synthType(context, expr)
+            .flatMap(_.reduce(context.bindings))
+            .flatMap {
+              case w if t === w => expr.pure
+              case w            => TypeMismatchError(expr, t, w).raiseError
+            }
+      }
+      .as(_type)
+
+  private def logStep(
+      context: TypeCheckerContext,
+      expr: Expr,
+      _type: Expr
+  ): F[Unit] =
+    log.tell(TypeCheckStep.CheckType(context.types, expr, _type))
 }

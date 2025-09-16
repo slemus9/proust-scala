@@ -21,6 +21,7 @@ object Program {
       case assignment: ExprAssignment => Right(assignment)
     }
     val emptyDefs            = Map.empty[Identifier, Expr]
+    val exprNames            = assignments.map(_.name)
 
     for
       exprs    <- assignments.foldLeftM(emptyDefs) { (exprs, assignment) =>
@@ -30,9 +31,9 @@ object Program {
                     Either.raiseUnless(exprs.contains(name))(MissingExprBinding(name)) *>
                       addDefinition(typeDefs, name, _type)
                   }
-    yield exprs.view.map { (name, expr) =>
-      ExprDefinition(name, typeDefs.get(name), expr)
-    }.toList
+    yield exprNames.flatMap { name =>
+      exprs.get(name).map(expr => ExprDefinition(name, typeDefs.get(name), expr))
+    }
 
   private def addDefinition(
       defs: Map[Identifier, Expr],

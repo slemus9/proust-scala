@@ -1,8 +1,10 @@
 package dev.proust.predicate.substitution
 
+import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.Monad
 import dev.proust.lang.Identifier
+import dev.proust.predicate.checker.steps.TypeCheckStep
 import dev.proust.predicate.lang.Expr
 
 trait Substitution[F[_]] {
@@ -25,10 +27,16 @@ trait Substitution[F[_]] {
   }
 }
 
-final class SubstitutionImpl[F[_]: Monad](using naming: NamingContext[F]) extends Substitution[F] {
+final class SubstitutionImpl[F[_]: Monad](using
+    naming: NamingContext[F],
+    log: Tell[F, TypeCheckStep]
+) extends Substitution[F] {
 
   extension (expr: Expr) {
     override def substitute(y: Identifier, s: Expr): F[Expr] =
+      substExpr(y, s).flatTap(result => logStep(expr, y, s, result))
+
+    def substExpr(y: Identifier, s: Expr): F[Expr] =
       expr match
         case Expr.Type              => Expr.Type.pure
         case Expr.Var(x) if x === y => s.pure
@@ -39,6 +47,9 @@ final class SubstitutionImpl[F[_]: Monad](using naming: NamingContext[F]) extend
         case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
   }
 
+  private def logStep(expr: Expr, y: Identifier, s: Expr, result: Expr): F[Unit] =
+    log.tell(TypeCheckStep.Substitute(expr, y, s, result))
+
   private def substLambda(
       lambda: Expr.Lambda,
       y: Identifier,
@@ -47,12 +58,12 @@ final class SubstitutionImpl[F[_]: Monad](using naming: NamingContext[F]) extend
     case Expr.Lambda(x, _) if x === y => lambda.pure
 
     case Expr.Lambda(x, e) if x === Expr.IgnoredBinding || !s.hasFree(x) =>
-      e.substitute(y, s).map(Expr.Lambda(x, _))
+      e.substExpr(y, s).map(Expr.Lambda(x, _))
 
     case Expr.Lambda(x, e) =>
       for
         z  <- naming.fresh(x)
-        e1 <- e.rename(x, z).flatMap(_.substitute(y, s))
+        e1 <- e.rename(x, z).flatMap(_.substExpr(y, s))
       yield Expr.Lambda(z, e1)
 
   private def substArrow(
@@ -68,8 +79,8 @@ final class SubstitutionImpl[F[_]: Monad](using naming: NamingContext[F]) extend
     case Expr.Arrow(x, t1, t2) =>
       for
         z  <- naming.fresh(x)
-        w1 <- t1.rename(x, z).flatMap(_.substitute(y, s))
-        w2 <- t2.rename(x, z).flatMap(_.substitute(y, s))
+        w1 <- t1.rename(x, z).flatMap(_.substExpr(y, s))
+        w2 <- t2.rename(x, z).flatMap(_.substExpr(y, s))
       yield Expr.Arrow(z, w1, w2)
 
   private def binarySubst(y: Identifier, s: Expr)(
@@ -77,7 +88,7 @@ final class SubstitutionImpl[F[_]: Monad](using naming: NamingContext[F]) extend
       e2: Expr
   )(constructor: (Expr, Expr) => Expr): F[Expr] =
     for
-      s1 <- e1.substitute(y, s)
-      s2 <- e2.substitute(y, s)
+      s1 <- e1.substExpr(y, s)
+      s2 <- e2.substExpr(y, s)
     yield constructor(s1, s2)
 }

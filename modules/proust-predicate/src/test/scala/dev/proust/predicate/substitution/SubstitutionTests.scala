@@ -1,6 +1,7 @@
 package dev.proust.predicate.substitution
 
 import dev.proust.lang.Identifier
+import dev.proust.predicate.instances.TellInstances.noop
 import dev.proust.predicate.lang.AlphaEquivalence.given
 import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.printer.ExprPrinter.given

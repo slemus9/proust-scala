@@ -40,3 +40,8 @@ final class TypeMismatchError(expr: Expr, expectedType: Expr, actualType: Expr) 
   override val getMessage: String =
     s"Type mismatch for expression:\n\t${expr.show}\nExpected type:\n\t${expectedType.show}\nBut received: ${actualType.show}"
 }
+
+final class ExpectedFunctionTypeError(actualType: Expr) extends TypeError {
+  override val getMessage: String =
+    s"Expected a Function Type but received: ${actualType.show}"
+}
