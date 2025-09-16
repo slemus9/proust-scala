@@ -1,6 +1,5 @@
 package dev.proust.predicate.checker.steps
 
-import cats.data.Chain
 import dev.proust.lang.Identifier
 import dev.proust.predicate.checker.TypeCheckerContext.TypeContext
 import dev.proust.predicate.lang.Expr
@@ -15,5 +14,3 @@ enum TypeCheckStep {
   case ReduceExpr(from: Expr, to: Expr)
   case Substitute(expr: Expr, y: Identifier, s: Expr, result: Expr)
 }
-
-type TypeCheckSteps = Chain[TypeCheckStep]

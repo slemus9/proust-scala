@@ -7,7 +7,7 @@ import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.MonadThrow
 import dev.proust.lang.Identifier
-import dev.proust.predicate.checker.steps.TypeCheckSteps
+import dev.proust.predicate.checker.steps.TypeCheckStep
 import dev.proust.predicate.checker.TypeChecker
 import dev.proust.predicate.instances.StatefulRef
 import dev.proust.predicate.instances.TellConsole
@@ -25,7 +25,7 @@ object AppResources {
     for
       given Stateful[F, Map[Identifier, Int]] <- StatefulRef.of(Map.empty)
       given NamingContext[F]                   = StatefulNamingContext[F]
-      given Tell[F, TypeCheckSteps]            = TellConsole[F, TypeCheckSteps]
+      given Tell[F, TypeCheckStep]             = TellConsole[F, TypeCheckStep]
       typeChecker                              = TypeChecker[F]
     yield AppResources(typeChecker)
 }

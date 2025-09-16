@@ -1,12 +1,10 @@
 package dev.proust.predicate.substitution
 
-import cats.data.Chain
 import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.Monad
 import dev.proust.lang.Identifier
 import dev.proust.predicate.checker.steps.TypeCheckStep
-import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.lang.Expr
 
 trait Substitution[F[_]] {
@@ -31,7 +29,7 @@ trait Substitution[F[_]] {
 
 final class SubstitutionImpl[F[_]: Monad](using
     naming: NamingContext[F],
-    log: Tell[F, TypeCheckSteps]
+    log: Tell[F, TypeCheckStep]
 ) extends Substitution[F] {
 
   extension (expr: Expr) {
@@ -50,7 +48,7 @@ final class SubstitutionImpl[F[_]: Monad](using
   }
 
   private def logStep(expr: Expr, y: Identifier, s: Expr, result: Expr): F[Unit] =
-    log.tell(Chain.one(TypeCheckStep.Substitute(expr, y, s, result)))
+    log.tell(TypeCheckStep.Substitute(expr, y, s, result))
 
   private def substLambda(
       lambda: Expr.Lambda,

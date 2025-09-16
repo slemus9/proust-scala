@@ -1,11 +1,9 @@
 package dev.proust.predicate.checker.impl
 
-import cats.data.Chain
 import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.MonadThrow
 import dev.proust.predicate.checker.steps.TypeCheckStep
-import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.checker.ExprTypeChecker
 import dev.proust.predicate.checker.TypeCheckerContext
 import dev.proust.predicate.errors.TypeMismatchError
@@ -19,7 +17,7 @@ private[checker] final class ExprTypeCheckerImpl[F[_]: MonadThrow](using
     naming: NamingContext[F],
     subst: Substitution[F],
     eval: ExprReducer[F],
-    log: Tell[F, TypeCheckSteps]
+    log: Tell[F, TypeCheckStep]
 ) extends ExprTypeChecker[F],
       LambdaTypeCheckerImpl[F],
       ExprTypeSynthesizerImpl[F] {
@@ -52,5 +50,5 @@ private[checker] final class ExprTypeCheckerImpl[F[_]: MonadThrow](using
       expr: Expr,
       _type: Expr
   ): F[Unit] =
-    log.tell(Chain.one(TypeCheckStep.CheckType(context.types, expr, _type)))
+    log.tell(TypeCheckStep.CheckType(context.types, expr, _type))
 }

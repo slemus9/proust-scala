@@ -1,12 +1,10 @@
 package dev.proust.predicate.eval
 
-import cats.data.Chain
 import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.Monad
 import dev.proust.lang.Identifier
 import dev.proust.predicate.checker.steps.TypeCheckStep
-import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.substitution.Substitution
 
@@ -19,7 +17,7 @@ trait ExprReducer[F[_]] {
 
 final class ExprReducerImpl[F[_]: Monad](using
     subs: Substitution[F],
-    log: Tell[F, TypeCheckSteps]
+    log: Tell[F, TypeCheckStep]
 ) extends ExprReducer[F] {
 
   extension (expr: Expr) {
@@ -45,5 +43,5 @@ final class ExprReducerImpl[F[_]: Monad](using
   }
 
   private def logStep(from: Expr, to: Expr): F[Unit] =
-    log.tell(Chain.one(TypeCheckStep.ReduceExpr(from, to)))
+    log.tell(TypeCheckStep.ReduceExpr(from, to))
 }

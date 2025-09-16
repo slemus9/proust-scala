@@ -3,14 +3,10 @@ package dev.proust.predicate.printer
 import cats.syntax.all.*
 import cats.Show
 import dev.proust.predicate.checker.steps.TypeCheckStep
-import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.checker.TypeCheckerContext.TypeContext
 
 object TypeCheckStepPrinter {
   import ExprPrinter.printer
-
-  given Show[TypeCheckSteps] =
-    Show.show(_.map(printer.show).foldSmash("", "\n", ""))
 
   given printer: Show[TypeCheckStep] = new Show {
 

@@ -1,11 +1,9 @@
 package dev.proust.predicate.checker.impl
 
-import cats.data.Chain
 import cats.mtl.Tell
 import cats.syntax.all.*
 import cats.MonadThrow
 import dev.proust.predicate.checker.steps.TypeCheckStep
-import dev.proust.predicate.checker.steps.TypeCheckSteps
 import dev.proust.predicate.checker.ExprTypeChecker
 import dev.proust.predicate.checker.ExprTypeSynthesizer
 import dev.proust.predicate.checker.TypeCheckerContext
@@ -21,7 +19,7 @@ import dev.proust.predicate.substitution.Substitution
 private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
     subst: Substitution[F],
     eval: ExprReducer[F],
-    log: Tell[F, TypeCheckSteps]
+    log: Tell[F, TypeCheckStep]
 ) extends ExprTypeSynthesizer[F] {
   self: ExprTypeChecker[F] =>
 
@@ -32,9 +30,9 @@ private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
       expr: Expr
   ): F[Expr] =
     for
-      _     <- log.tell(Chain.one(TypeCheckStep.SynthType(context.types, expr)))
+      _     <- log.tell(TypeCheckStep.SynthType(context.types, expr))
       _type <- synthForExpr(context, expr)
-      _     <- log.tell(Chain.one(TypeCheckStep.TypeSynthesized(expr, _type)))
+      _     <- log.tell(TypeCheckStep.TypeSynthesized(expr, _type))
     yield _type
 
   private def synthForExpr(
