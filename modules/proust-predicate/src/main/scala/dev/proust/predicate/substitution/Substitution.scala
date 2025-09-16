@@ -36,20 +36,21 @@ final class SubstitutionImpl[F[_]: Monad](using
 
   extension (expr: Expr) {
     override def substitute(y: Identifier, s: Expr): F[Expr] =
-      logStep(expr, y, s) *> {
-        expr match
-          case Expr.Type              => Expr.Type.pure
-          case Expr.Var(x) if x === y => s.pure
-          case expr: Expr.Var         => expr.pure
-          case expr: Expr.Lambda      => substLambda(expr, y, s)
-          case expr: Expr.Arrow       => substArrow(expr, y, s)
-          case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
-          case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
-      }
+      substExpr(y, s).flatTap(result => logStep(expr, y, s, result))
+
+    def substExpr(y: Identifier, s: Expr): F[Expr] =
+      expr match
+        case Expr.Type              => Expr.Type.pure
+        case Expr.Var(x) if x === y => s.pure
+        case expr: Expr.Var         => expr.pure
+        case expr: Expr.Lambda      => substLambda(expr, y, s)
+        case expr: Expr.Arrow       => substArrow(expr, y, s)
+        case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
+        case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
   }
 
-  private def logStep(expr: Expr, y: Identifier, s: Expr): F[Unit] =
-    log.tell(Chain.one(TypeCheckStep.Substitute(expr, y, s)))
+  private def logStep(expr: Expr, y: Identifier, s: Expr, result: Expr): F[Unit] =
+    log.tell(Chain.one(TypeCheckStep.Substitute(expr, y, s, result)))
 
   private def substLambda(
       lambda: Expr.Lambda,
@@ -59,12 +60,12 @@ final class SubstitutionImpl[F[_]: Monad](using
     case Expr.Lambda(x, _) if x === y => lambda.pure
 
     case Expr.Lambda(x, e) if x === Expr.IgnoredBinding || !s.hasFree(x) =>
-      e.substitute(y, s).map(Expr.Lambda(x, _))
+      e.substExpr(y, s).map(Expr.Lambda(x, _))
 
     case Expr.Lambda(x, e) =>
       for
         z  <- naming.fresh(x)
-        e1 <- e.rename(x, z).flatMap(_.substitute(y, s))
+        e1 <- e.rename(x, z).flatMap(_.substExpr(y, s))
       yield Expr.Lambda(z, e1)
 
   private def substArrow(
@@ -80,8 +81,8 @@ final class SubstitutionImpl[F[_]: Monad](using
     case Expr.Arrow(x, t1, t2) =>
       for
         z  <- naming.fresh(x)
-        w1 <- t1.rename(x, z).flatMap(_.substitute(y, s))
-        w2 <- t2.rename(x, z).flatMap(_.substitute(y, s))
+        w1 <- t1.rename(x, z).flatMap(_.substExpr(y, s))
+        w2 <- t2.rename(x, z).flatMap(_.substExpr(y, s))
       yield Expr.Arrow(z, w1, w2)
 
   private def binarySubst(y: Identifier, s: Expr)(
@@ -89,7 +90,7 @@ final class SubstitutionImpl[F[_]: Monad](using
       e2: Expr
   )(constructor: (Expr, Expr) => Expr): F[Expr] =
     for
-      s1 <- e1.substitute(y, s)
-      s2 <- e2.substitute(y, s)
+      s1 <- e1.substExpr(y, s)
+      s2 <- e2.substExpr(y, s)
     yield constructor(s1, s2)
 }

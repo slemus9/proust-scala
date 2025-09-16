@@ -14,7 +14,16 @@ and : Bool -> Bool -> Bool;
 and = \b1 b2 -> if Bool b1 true b2;
 
 Pair : Type -> Type -> Type;
-Pair = \P Q -> (C : Type) -> (P -> Q -> C) -> C;
+Pair = \A B -> (C : Type) -> (A -> B -> C) -> C;
 
-pair : (P, Q : Type) -> P -> Q -> Pair P Q;
-pair = \_ _ p q _ elim -> elim p q;
+pair : (A, B : Type) -> A -> B -> Pair A B;
+pair = \_ _ a b _ elim -> elim a b;
+
+first : (A, B : Type) -> (Pair A B) -> A;
+first = \A _ p -> p A (\a _ -> a);
+
+snd : (A, B : Type) -> (Pair A B) -> B;
+snd = \_ B p -> p B (\_ b -> b);
+
+pairCommutes : (A, B : Type) -> (Pair A B) -> (Pair B A);
+pairCommutes = \A B p -> pair B A (snd A B p) (first A B p)

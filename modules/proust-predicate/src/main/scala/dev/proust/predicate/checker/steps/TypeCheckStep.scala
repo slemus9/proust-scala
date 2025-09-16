@@ -13,7 +13,7 @@ enum TypeCheckStep {
   case SynthType(context: TypeContext, expr: Expr)
   case TypeSynthesized(expr: Expr, _type: Expr)
   case ReduceExpr(from: Expr, to: Expr)
-  case Substitute(expr: Expr, y: Identifier, s: Expr)
+  case Substitute(expr: Expr, y: Identifier, s: Expr, result: Expr)
 }
 
 type TypeCheckSteps = Chain[TypeCheckStep]

@@ -18,44 +18,46 @@ object TypeCheckStepPrinter {
       step match
         case TypeCheckStep.CheckType(context, expr, _type) =>
           s"""
-          | Checking if the expression:
-          | \t${expr.show}
-          | Has the type:
-          | \t${_type.show}
-          | Using the context:
-          | ${showContext(context)}
+          |Checking if the expression:
+          |\t${expr.show}
+          |Has the type:
+          |\t${_type.show}
+          |Using the context:
+          |\t${showContext(context)}
           """.stripMargin.trim
 
         case TypeCheckStep.SynthType(context, expr) =>
           s"""
-          | Inferring the type of the expression:
-          | \t${expr.show}
-          | Using the context:
-          | ${showContext(context)}
+          |Inferring the type of the expression:
+          |\t${expr.show}
+          |Using the context:
+          |\t${showContext(context)}
           """.stripMargin.trim
 
         case TypeCheckStep.TypeSynthesized(expr, _type) =>
           s"""
-          | The inferred type of the expression:
-          | \t${expr.show}
-          | Is:
-          | \t${_type.show}
+          |The inferred type of the expression:
+          |\t${expr.show}
+          |Is:
+          |\t${_type.show}
           """.stripMargin.trim
 
         case TypeCheckStep.ReduceExpr(from, to) =>
           s"""
-          | Reduced the expression:
-          | \t${from.show}
-          | To:
-          | \t${to.show}
+          |Reduced the expression:
+          |\t${from.show}
+          |To:
+          |\t${to.show}
           """.stripMargin.trim
 
-        case TypeCheckStep.Substitute(expr, y, s) =>
+        case TypeCheckStep.Substitute(expr, y, s, result) =>
           s"""
-          | Substituting ${y} by:
-          | \t${s.show}
-          | In the expression:
-          | \t${expr.show}
+          |Substituting ${y} by:
+          |\t${s.show}
+          |In the expression:
+          |\t${expr.show}
+          |Reduced to:
+          |\t${result.show}
           """.stripMargin.trim
 
     private def showContext(context: TypeContext): String =

@@ -48,7 +48,7 @@ lazy val proustPredicate = project
       fs2io,
       weaver % Test
     ),
-    Compile / run / fork := true
+    Compile / run / fork := false
   )
 
 /**
