@@ -26,4 +26,22 @@ snd : (A, B : Type) -> (Pair A B) -> B;
 snd = \_ B p -> p B (\_ b -> b);
 
 pairCommutes : (A, B : Type) -> (Pair A B) -> (Pair B A);
-pairCommutes = \A B p -> pair B A (snd A B p) (first A B p)
+pairCommutes = \A B p -> pair B A (snd A B p) (first A B p);
+
+Nat : Type;
+Nat = (A : Type) -> (A -> A) -> A -> A;
+
+zero : Nat;
+zero = \_ _ a -> a;
+
+suc : Nat -> Nat;
+suc = \n A f a -> f (n A f a);
+
+one : Nat;
+one = suc zero;
+
+two : Nat;
+two = suc one;
+
+plus : Nat -> Nat -> Nat;
+plus = \m n A f a -> m A f (n A f a);
