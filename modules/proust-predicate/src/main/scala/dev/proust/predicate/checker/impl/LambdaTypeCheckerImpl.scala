@@ -59,5 +59,8 @@ private[checker] trait LambdaTypeCheckerImpl[F[_]: Monad](using naming: NamingCo
         e1 <- e.rename(x, z)
         e2 <- checkExpr(context.addType(z, t), e1, w)
       yield e2
+
+    case (Lambda(x, e), Arrow(IgnoredBinding, t, w)) =>
+      checkExpr(context.addType(x, t), e, w)
   }
 }

@@ -42,8 +42,8 @@ object EqRefl {
 opaque type EqElim <: Expr = Expr
 object EqElim {
   private type Unapplied = (
-      Identifier,
-      Identifier,
+      Expr,
+      Expr,
       Expr,
       Expr,
       Expr
@@ -63,17 +63,17 @@ object EqElim {
     * }}}
     */
   def apply(
-      x: Identifier,
-      y: Identifier,
+      x: Expr,
+      y: Expr,
       prop: Expr,
       propx: Expr,
       eq: Expr
   ): EqElim =
-    ApplyMany(Var(Name), Var(x), Var(y), prop, propx, eq)
+    ApplyMany(Var(Name), x, y, prop, propx, eq)
 
   def unapply(expr: Expr): Option[Unapplied] =
     expr match
-      case ApplyMany(Var(Name), Var(x), Var(y), prop, propx, eq) =>
+      case ApplyMany(Var(Name), x, y, prop, propx, eq) =>
         Some((x, y, prop, propx, eq))
 
       case _ => None

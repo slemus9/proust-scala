@@ -11,9 +11,13 @@ object ExprPrinter {
       case Expr.Type             => "Type"
       case Expr.Var(x)           => x
       case Expr.Lambda(x, e)     => s"\\$x -> ${show(e)}"
-      case Expr.Apply(f, x)      => s"${show(f)} ${show(x).inParensIf(x.isRecursive)}"
+      case Expr.Apply(f, x)      => s"${show(f).inParensIf(shouldWrapFunctionCall(f))} ${show(x).inParensIf(x.isRecursive)}"
       case Expr.Arrow(x, t1, t2) => s"($x : ${show(t1).inParensIf(t1.isRecursive)}) -> ${show(t2)}"
       case Expr.Annotate(e, t)   => s"${show(e)} : ${show(t)}"
   }
 
+  private def shouldWrapFunctionCall(expr: Expr): Boolean =
+    expr match
+      case _: (Expr.Lambda | Expr.Arrow | Expr.Annotate) => true
+      case _                                             => false
 }

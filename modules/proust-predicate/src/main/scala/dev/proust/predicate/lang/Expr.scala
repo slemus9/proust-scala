@@ -1,7 +1,6 @@
 package dev.proust.predicate.lang
 
 import cats.syntax.all.*
-import cats.Eval
 import dev.proust.lang.Identifier
 import dev.proust.predicate.macros.ExprStringOps
 
@@ -18,6 +17,10 @@ enum Expr {
   def isRecursive: Boolean = self match
     case _: (Type.type | Var) => false
     case _                    => true
+
+  def isApply: Boolean = self match
+    case _: Apply => true
+    case _        => false
 
   def hasFree(y: Identifier, bounded: Set[Identifier] = Set.empty): Boolean = self match
     case Expr.Type             => false
@@ -44,13 +47,15 @@ object Expr {
 
     def unapplySeq(expr: Expr): Option[Seq[Expr]] =
       expr match
-        case expr: Apply => Some(accumExprs(expr).value)
+        case expr: Apply => Some(accumArgs(expr))
         case _           => None
 
-    // We use Eval for stack-safety
-    private def accumExprs(expr: Expr): Eval[List[Expr]] =
+    /**
+      * Accumulates the arguments of a function application chain
+      */
+    private def accumArgs(expr: Expr, args: List[Expr] = List.empty): List[Expr] =
       expr match
-        case Apply(f, x) => (accumExprs(f), accumExprs(x)).mapN(_ ++ _)
-        case expr        => Eval.always(List(expr))
+        case Apply(f, x) => accumArgs(f, x :: args)
+        case expr        => expr :: args
   }
 }

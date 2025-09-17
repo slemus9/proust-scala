@@ -1,0 +1,5 @@
+eqSym : (A : Type) -> (x, y : A) -> (x == y) -> (y == x);
+eqSym = \_ x y eq -> eqElim x y (\z -> z == x) (eqRefl x) eq;
+
+eqTrans : (A : Type) -> (x, y, z : A) -> (x == y) -> (y == z) -> (x == z);
+eqTrans = \A x y z eq1 eq2 -> eqElim y x (\w -> w == z) eq2 (eqSym A x y eq1);
