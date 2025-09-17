@@ -35,7 +35,7 @@ final class ExprReducerImpl[F[_]: Monad](using
         case EqElim(x, y, prop, propx, eq) => evalEqElim(bindings, x, y, prop, propx, eq)
         case Expr.Apply(f, arg)            =>
           f.eval(bindings).flatMap {
-            case Expr.Lambda(x, e) => arg.eval(bindings).flatMap(e.substitute(x, _))
+            case Expr.Lambda(x, e) => arg.eval(bindings).flatMap(e.substitute(x, _)).flatMap(_.reduce(bindings))
             case f                 => arg.eval(bindings).map(Expr.Apply(f, _))
           }
         case Expr.Arrow(x, t, w)           =>
