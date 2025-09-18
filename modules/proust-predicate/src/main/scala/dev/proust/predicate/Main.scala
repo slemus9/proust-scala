@@ -4,6 +4,7 @@ import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
 import cats.syntax.all.*
+import dev.proust.predicate.errors.ProustError
 import dev.proust.predicate.parser.ProgramParser
 import dev.proust.predicate.resources.AppResources
 import fs2.io.file.Files
@@ -14,7 +15,11 @@ object Main extends IOApp {
   private val files = Files[IO]
 
   override def run(args: List[String]): IO[ExitCode] =
-    checkProgram(args).as(ExitCode.Success)
+    checkProgram(args)
+      .onError { case error: ProustError =>
+        IO.consoleForIO.errorln(error.getMessage)
+      }
+      .as(ExitCode.Success)
 
   private def checkProgram(args: List[String]): IO[Unit] =
     for

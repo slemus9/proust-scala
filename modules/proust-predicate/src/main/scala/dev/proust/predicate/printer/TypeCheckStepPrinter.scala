@@ -2,6 +2,7 @@ package dev.proust.predicate.printer
 
 import cats.syntax.all.*
 import cats.Show
+import dev.proust.lang.Identifier
 import dev.proust.predicate.checker.steps.TypeCheckStep
 import dev.proust.predicate.checker.TypeCheckerContext.TypeContext
 
@@ -28,6 +29,14 @@ object TypeCheckStepPrinter {
           |\t${expr.show}
           |Using the context:
           |\t${showContext(context)}
+          """.stripMargin.trim
+
+        case TypeCheckStep.CheckSynth(expected, inferred) =>
+          s"""
+          |Checking if Expected type:
+          |\t${expected.show}
+          |Is equal to Inferred type:
+          |\t${inferred.show}
           """.stripMargin.trim
 
         case TypeCheckStep.TypeSynthesized(expr, _type) =>

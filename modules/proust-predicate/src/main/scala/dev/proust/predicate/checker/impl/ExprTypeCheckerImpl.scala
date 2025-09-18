@@ -32,23 +32,19 @@ private[checker] final class ExprTypeCheckerImpl[F[_]: MonadThrow](using
     _type
       .reduce(context.bindings)
       .tupleLeft(expr)
-      .flatTap((expr, _type) => logStep(context, expr, _type))
+      .flatTap { (expr, _type) =>
+        log.tell(TypeCheckStep.CheckType(context.types, expr, _type))
+      }
       .flatMap {
         case (expr: Lambda, _type: Arrow) => checkLambda(context, expr, _type)
         case (expr, t)                    =>
           synthType(context, expr)
             .flatMap(_.reduce(context.bindings))
+            .flatTap(w => log.tell(TypeCheckStep.CheckSynth(t, w)))
             .flatMap {
               case w if t === w => expr.pure
               case w            => TypeMismatchError(expr, t, w).raiseError
             }
       }
       .as(_type)
-
-  private def logStep(
-      context: TypeCheckerContext,
-      expr: Expr,
-      _type: Expr
-  ): F[Unit] =
-    log.tell(TypeCheckStep.CheckType(context.types, expr, _type))
 }
