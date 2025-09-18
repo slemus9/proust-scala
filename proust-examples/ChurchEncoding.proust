@@ -1,47 +1,47 @@
-Bool : Type;
-Bool = (X : Type) -> X -> X -> X;
+Bool_c : Type;
+Bool_c = (X : Type) -> X -> X -> X;
 
-true : Bool;
-true = \_ x _ -> x;
+true_c : Bool_c;
+true_c = \_ x _ -> x;
 
-false : Bool;
-false = \_ _ y -> y;
+false_c : Bool_c;
+false_c = \_ _ y -> y;
 
-if : (X : Type) -> Bool -> X -> X -> X;
-if = \X b -> b X;
+if_c : (X : Type) -> Bool_c -> X -> X -> X;
+if_c = \X b -> b X;
 
-and : Bool -> Bool -> Bool;
-and = \b1 b2 -> if Bool b1 true b2;
+and_c : Bool_c -> Bool_c -> Bool_c;
+and_c = \b1 b2 -> if_c Bool_c b1 true_c b2;
 
-Pair : Type -> Type -> Type;
-Pair = \A B -> (C : Type) -> (A -> B -> C) -> C;
+Pair_c : Type -> Type -> Type;
+Pair_c = \A B -> (C : Type) -> (A -> B -> C) -> C;
 
-pair : (A, B : Type) -> A -> B -> Pair A B;
-pair = \_ _ a b _ elim -> elim a b;
+pair_c : (A, B : Type) -> A -> B -> Pair_c A B;
+pair_c = \_ _ a b _ elim -> elim a b;
 
-first : (A, B : Type) -> (Pair A B) -> A;
-first = \A _ p -> p A (\a _ -> a);
+first_c : (A, B : Type) -> (Pair_c A B) -> A;
+first_c = \A _ p -> p A (\a _ -> a);
 
-snd : (A, B : Type) -> (Pair A B) -> B;
-snd = \_ B p -> p B (\_ b -> b);
+snd_c : (A, B : Type) -> (Pair_c A B) -> B;
+snd_c = \_ B p -> p B (\_ b -> b);
 
-pairCommutes : (A, B : Type) -> (Pair A B) -> (Pair B A);
-pairCommutes = \A B p -> pair B A (snd A B p) (first A B p);
+pair_c-commutes : (A, B : Type) -> (Pair_c A B) -> (Pair_c B A);
+pair_c-commutes = \A B p -> pair_c B A (snd_c A B p) (first_c A B p);
 
-Nat : Type;
-Nat = (A : Type) -> (A -> A) -> A -> A;
+Nat_c : Type;
+Nat_c = (A : Type) -> (A -> A) -> A -> A;
 
-zero : Nat;
-zero = \_ _ a -> a;
+zero_c : Nat_c;
+zero_c = \_ _ a -> a;
 
-suc : Nat -> Nat;
-suc = \n A f a -> f (n A f a);
+suc_c : Nat_c -> Nat_c;
+suc_c = \n A f a -> f (n A f a);
 
-one : Nat;
-one = suc zero;
+one_c : Nat_c;
+one_c = suc_c zero_c;
 
-two : Nat;
-two = suc one;
+two_c : Nat_c;
+two_c = suc_c one_c;
 
-plus : Nat -> Nat -> Nat;
-plus = \m n A f a -> m A f (n A f a);
+plus_c : Nat_c -> Nat_c -> Nat_c;
+plus_c = \m n A f a -> m A f (n A f a);

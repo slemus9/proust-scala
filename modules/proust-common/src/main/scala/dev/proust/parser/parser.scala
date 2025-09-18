@@ -29,7 +29,7 @@ val nat: Parser[Int] =
   }.tokenized
 
 val identifier: Parser[Identifier] =
-  (alpha ~ alpha.orElse(digit).rep0).mapFilter { (c, str) =>
+  (alpha ~ (alpha | digit | Parser.charIn('-', '_')).rep0).mapFilter { (c, str) =>
     Identifier.option((c :: str).mkString)
   }.tokenized
 

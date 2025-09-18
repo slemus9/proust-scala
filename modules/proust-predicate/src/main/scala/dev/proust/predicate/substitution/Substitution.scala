@@ -34,7 +34,9 @@ final class SubstitutionImpl[F[_]: Monad](using
 
   extension (expr: Expr) {
     override def substitute(y: Identifier, s: Expr): F[Expr] =
-      substExpr(y, s).flatTap(result => logStep(expr, y, s, result))
+      substExpr(y, s).flatTap { result =>
+        log.tell(TypeCheckStep.Substitute(expr, y, s, result))
+      }
 
     def substExpr(y: Identifier, s: Expr): F[Expr] =
       expr match
@@ -46,9 +48,6 @@ final class SubstitutionImpl[F[_]: Monad](using
         case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
         case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
   }
-
-  private def logStep(expr: Expr, y: Identifier, s: Expr, result: Expr): F[Unit] =
-    log.tell(TypeCheckStep.Substitute(expr, y, s, result))
 
   private def substLambda(
       lambda: Expr.Lambda,

@@ -1,0 +1,5 @@
+and : Bool -> Bool -> Bool;
+and = \b1 b2 -> boolElim b1 (\_ -> Bool) true b2;
+
+andEq : (b : Bool) -> (and b b) == b;
+andEq = \b -> boolElim b (\b -> (and b b) == b) (eqRefl true) (eqRefl false);

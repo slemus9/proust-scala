@@ -10,6 +10,7 @@ import dev.proust.predicate.lang.Expr
 enum TypeCheckStep {
   case CheckType(context: TypeContext, expr: Expr, _type: Expr)
   case SynthType(context: TypeContext, expr: Expr)
+  case CheckSynth(expected: Expr, inferred: Expr)
   case TypeSynthesized(expr: Expr, _type: Expr)
   case ReduceExpr(from: Expr, to: Expr)
   case Substitute(expr: Expr, y: Identifier, s: Expr, result: Expr)
