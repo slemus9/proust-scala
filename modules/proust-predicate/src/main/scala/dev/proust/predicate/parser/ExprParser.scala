@@ -8,6 +8,7 @@ import dev.proust.parser.inParens
 import dev.proust.parser.matching
 import dev.proust.parser.whitespace
 import dev.proust.predicate.errors.ParseError
+import dev.proust.predicate.lang.EqType
 import dev.proust.predicate.lang.Expr
 
 object ExprParser {
@@ -16,7 +17,7 @@ object ExprParser {
     (whitespace *> annotatedExpr).parseAll(str).left.map(ParseError.apply)
 
   def expr: Parser[Expr] =
-    Parser.defer(lambda | arrow.backtrack | application | baseExpr)
+    Parser.defer(lambda | arrow.backtrack | eqType.backtrack | application | baseExpr)
 
   private val variable: Parser[Expr] =
     identifier.map {
@@ -35,6 +36,9 @@ object ExprParser {
 
   private def application: Parser[Expr] =
     baseExpr.rep.map(_.reduceLeft(Expr.Apply.apply))
+
+  private def eqType: Parser[EqType] =
+    ((baseExpr <* matching(EqType.Name)) ~ baseExpr).map(EqType.apply)
 
   private def lambda: Parser[Expr.Lambda] =
     val params = functionParam.rep.between(matching('\\'), matching("->"))

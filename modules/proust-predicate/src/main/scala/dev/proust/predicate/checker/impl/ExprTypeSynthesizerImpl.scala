@@ -10,6 +10,9 @@ import dev.proust.predicate.checker.TypeCheckerContext
 import dev.proust.predicate.errors.ExpectedFunctionTypeError
 import dev.proust.predicate.errors.TypeSynthError
 import dev.proust.predicate.eval.ExprReducer
+import dev.proust.predicate.lang.EqElim
+import dev.proust.predicate.lang.EqRefl
+import dev.proust.predicate.lang.EqType
 import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.substitution.Substitution
 
@@ -20,7 +23,8 @@ private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
     subst: Substitution[F],
     eval: ExprReducer[F],
     log: Tell[F, TypeCheckStep]
-) extends ExprTypeSynthesizer[F] {
+) extends ExprTypeSynthesizer[F],
+      IdentityTypeCheckerImpl[F] {
   self: ExprTypeChecker[F] =>
 
   import Expr.*
@@ -39,12 +43,15 @@ private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
       context: TypeCheckerContext,
       expr: Expr
   ): F[Expr] = expr match
-    case Type           => Type.pure
-    case Var(x)         => context.types.getLatest(x).liftTo[F](TypeSynthError(expr))
-    case expr: Lambda   => TypeSynthError(expr).raiseError
-    case expr: Arrow    => synthArrow(context, expr)
-    case expr: Annotate => synthAnnotation(context, expr)
-    case expr: Apply    => synthApplication(context, expr)
+    case Type                          => Type.pure
+    case Var(x)                        => context.types.getLatest(x).liftTo[F](TypeSynthError(expr))
+    case expr: Lambda                  => TypeSynthError(expr).raiseError
+    case expr: Arrow                   => synthArrow(context, expr)
+    case expr: Annotate                => synthAnnotation(context, expr)
+    case EqType(x, y)                  => synthEqType(context, x, y)
+    case EqRefl(x)                     => synthEqRefl(context, x)
+    case EqElim(x, y, prop, propx, eq) => synthEqElim(context, x, y, prop, propx, eq)
+    case expr: Apply                   => synthApplication(context, expr)
 
   private def synthArrow(
       context: TypeCheckerContext,

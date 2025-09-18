@@ -1,6 +1,6 @@
 package dev.proust.predicate.lang
 
-import cats.syntax.eq.*
+import cats.syntax.all.*
 import dev.proust.lang.Identifier
 import dev.proust.predicate.macros.ExprStringOps
 
@@ -18,6 +18,10 @@ enum Expr {
     case _: (Type.type | Var) => false
     case _                    => true
 
+  def isApply: Boolean = self match
+    case _: Apply => true
+    case _        => false
+
   def hasFree(y: Identifier, bounded: Set[Identifier] = Set.empty): Boolean = self match
     case Expr.Type             => false
     case Expr.Var(x)           => x === y && !bounded(x)
@@ -34,5 +38,24 @@ object Expr {
   inline def apply(inline str: String): Expr =
     ExprStringOps.proustExprStr(str)
 
-  type TypeExpr = Var | Arrow | Type.type
+  /**
+    * Convenience object to manipulate chains of function application
+    */
+  object ApplyMany {
+    def apply(expr: Expr, exprs: Expr*): Expr =
+      exprs.foldLeft(expr)(Apply.apply)
+
+    def unapplySeq(expr: Expr): Option[Seq[Expr]] =
+      expr match
+        case expr: Apply => Some(accumArgs(expr))
+        case _           => None
+
+    /**
+      * Accumulates the arguments of a function application chain
+      */
+    private def accumArgs(expr: Expr, args: List[Expr] = List.empty): List[Expr] =
+      expr match
+        case Apply(f, x) => accumArgs(f, x :: args)
+        case expr        => expr :: args
+  }
 }
