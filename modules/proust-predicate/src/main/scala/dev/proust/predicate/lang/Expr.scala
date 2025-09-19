@@ -29,6 +29,9 @@ enum Expr {
     case Expr.Arrow(x, t1, t2) => t1.hasFree(y, bounded + x) || t2.hasFree(y, bounded + x)
     case Expr.Apply(f, arg)    => f.hasFree(y, bounded) || arg.hasFree(y, bounded)
     case Expr.Annotate(e, t)   => e.hasFree(y, bounded) || t.hasFree(y, bounded)
+
+  def apply(expr: Expr): Expr =
+    Apply(self, expr)
 }
 
 object Expr {
@@ -57,5 +60,10 @@ object Expr {
       expr match
         case Apply(f, x) => accumArgs(f, x :: args)
         case expr        => expr :: args
+  }
+
+  object Function {
+    def apply(domain: Expr, range: Expr): Expr =
+      Arrow(IgnoredBinding, domain, range)
   }
 }

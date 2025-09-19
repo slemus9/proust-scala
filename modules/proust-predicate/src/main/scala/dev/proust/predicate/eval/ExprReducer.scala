@@ -34,17 +34,24 @@ final class ExprReducerImpl[F[_]: Monad](using
         case Expr.Annotate(e, t)                   => e.eval(bindings)
         case EqElim(x, y, prop, propx, eq)         => evalEqElim(bindings, x, y, prop, propx, eq)
         case BoolElim(bool, prop, onTrue, onFalse) => evalBoolElim(bindings, bool, prop, onTrue, onFalse)
-        case Expr.Apply(f, arg)                    =>
-          f.eval(bindings).flatMap {
-            case Expr.Lambda(x, e) => arg.eval(bindings).flatMap(e.substitute(x, _)).flatMap(_.eval(bindings))
-            case f                 => arg.eval(bindings).map(Expr.Apply(f, _))
-          }
-        case Expr.Arrow(x, t, w)                   =>
-          for
-            t1 <- t.eval(bindings)
-            w1 <- w.eval(bindings)
-          yield Expr.Arrow(x, t1, w1)
+        case NatElim(n, prop, propZero, propSuc)   => evalNatElim(bindings, n, prop, propZero, propSuc)
+        case expr: Expr.Apply                      => evalApply(bindings, expr)
+        case expr: Expr.Arrow                      => evalArrow(bindings, expr)
   }
+
+  private def evalApply(bindings: Map[Identifier, Expr], app: Expr.Apply): F[Expr] =
+    val Expr.Apply(f, arg) = app
+    f.eval(bindings).flatMap {
+      case Expr.Lambda(x, e) => arg.eval(bindings).flatMap(e.substitute(x, _)).flatMap(_.eval(bindings))
+      case f                 => arg.eval(bindings).map(Expr.Apply(f, _))
+    }
+
+  private def evalArrow(bindings: Map[Identifier, Expr], arrow: Expr.Arrow): F[Expr] =
+    val Expr.Arrow(x, t, w) = arrow
+    for
+      t1 <- t.eval(bindings)
+      w1 <- w.eval(bindings)
+    yield Expr.Arrow(x, t1, w1)
 
   private def evalEqElim(
       bindings: Map[Identifier, Expr],
@@ -81,5 +88,28 @@ final class ExprReducerImpl[F[_]: Monad](using
           redOnTrue  <- onTrue.eval(bindings)
           redOnFalse <- onFalse.eval(bindings)
         yield BoolElim(bool, redProp, redOnTrue, redOnFalse)
+    }
+
+  private def evalNatElim(
+      bindings: Map[Identifier, Expr],
+      n: Expr,
+      prop: Expr,
+      propZero: Expr,
+      propSuc: Expr
+  ): F[Expr] =
+    n.eval(bindings).flatMap {
+      case Expr.Var(NatZero.Name) => propZero.eval(bindings)
+
+      case NatSuc(n) =>
+        evalNatElim(bindings, n, prop, propZero, propSuc).flatMap { propN =>
+          propSuc(n)(propN).eval(bindings)
+        }
+
+      case n =>
+        for
+          redProp     <- prop.eval(bindings)
+          redPropZero <- propZero.eval(bindings)
+          redPropSuc  <- propSuc.eval(bindings)
+        yield NatElim(n, redProp, redPropZero, redPropSuc)
     }
 }

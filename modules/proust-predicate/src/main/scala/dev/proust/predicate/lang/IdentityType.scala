@@ -7,11 +7,10 @@ import dev.proust.predicate.lang.Expr.*
 /**
   * Represents the Identity Type
   */
-opaque type EqType <: Expr = Expr
 object EqType {
   val Name = Identifier("==")
 
-  def apply(x: Expr, y: Expr): EqType =
+  def apply(x: Expr, y: Expr): Expr =
     ApplyMany(Var(Name), x, y)
 
   def unapply(expr: Expr): Option[(Expr, Expr)] =
@@ -23,11 +22,10 @@ object EqType {
 /**
   * Represents the introduction rule for Identity Types (reflexivity)
   */
-opaque type EqRefl <: Expr = Expr
 object EqRefl {
   val Name = Identifier("eqRefl")
 
-  def apply(x: Expr): EqRefl =
+  def apply(x: Expr): Expr =
     Apply(Var(Name), x)
 
   def unapply(expr: Expr): Option[Expr] =
@@ -39,7 +37,6 @@ object EqRefl {
 /**
   * Represents the elimination rule for Identity Types
   */
-opaque type EqElim <: Expr = Expr
 object EqElim {
   private type Unapplied = (
       Expr,
@@ -68,7 +65,7 @@ object EqElim {
       prop: Expr,
       propx: Expr,
       eq: Expr
-  ): EqElim =
+  ): Expr =
     ApplyMany(Var(Name), x, y, prop, propx, eq)
 
   def unapply(expr: Expr): Option[Unapplied] =
