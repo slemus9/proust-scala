@@ -3,28 +3,24 @@ package dev.proust.predicate.lang
 import dev.proust.lang.Identifier
 import dev.proust.predicate.lang.Expr.*
 
-opaque type BoolType <: Expr = Expr
 object BoolType {
   val Name = Identifier("Bool")
 
-  val value: BoolType = Var(Name)
+  val value: Expr = Var(Name)
 }
 
-opaque type BoolTrue <: Expr = Expr
 object BoolTrue {
   val Name = Identifier("true")
 
-  val value: BoolTrue = Var(Name)
+  val value: Expr = Var(Name)
 }
 
-opaque type BoolFalse <: Expr = Expr
 object BoolFalse {
   val Name = Identifier("false")
 
-  val value: BoolFalse = Var(Name)
+  val value: Expr = Var(Name)
 }
 
-opaque type BoolElim <: Expr = Expr
 object BoolElim {
   val Name = Identifier("boolElim")
 
@@ -33,7 +29,7 @@ object BoolElim {
       prop: Expr,
       onTrue: Expr,
       onFalse: Expr
-  ): BoolElim =
+  ): Expr =
     ApplyMany(Var(Name), bool, prop, onTrue, onFalse)
 
   def unapply(expr: Expr): Option[(Expr, Expr, Expr, Expr)] =

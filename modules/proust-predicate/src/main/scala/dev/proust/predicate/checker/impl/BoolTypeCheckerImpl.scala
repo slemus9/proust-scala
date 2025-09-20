@@ -10,7 +10,7 @@ import dev.proust.predicate.lang.*
 /**
   * Mixing module that specializes in checking boolean expressions
   */
-trait BoolTypeCheckerImpl[F[_]: Monad] {
+private[checker] trait BoolTypeCheckerImpl[F[_]: Monad] {
   self: ExprTypeChecker[F] & ExprTypeSynthesizer[F] =>
 
   import Expr.*

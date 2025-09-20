@@ -37,7 +37,7 @@ object ExprParser {
   private def application: Parser[Expr] =
     baseExpr.rep.map(_.reduceLeft(Expr.Apply.apply))
 
-  private def eqType: Parser[EqType] =
+  private def eqType: Parser[Expr] =
     ((baseExpr <* matching(EqType.Name)) ~ baseExpr).map(EqType.apply)
 
   private def lambda: Parser[Expr.Lambda] =
