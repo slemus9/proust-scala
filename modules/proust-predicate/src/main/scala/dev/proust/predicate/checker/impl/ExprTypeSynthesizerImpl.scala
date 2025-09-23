@@ -23,7 +23,9 @@ private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
 ) extends ExprTypeSynthesizer[F],
       IdentityTypeCheckerImpl[F],
       BoolTypeCheckerImpl[F],
-      NatTypeCheckerImpl[F] {
+      NatTypeCheckerImpl[F],
+      UnitTypeCheckerImpl[F],
+      EmptyTypeCheckerImpl[F] {
   self: ExprTypeChecker[F] =>
 
   import Expr.*
@@ -45,6 +47,8 @@ private[checker] trait ExprTypeSynthesizerImpl[F[_]: MonadThrow](using
     synthEq(context)
       .orElse(synthBool(context))
       .orElse(synthNat(context))
+      .orElse(synthUnit)
+      .orElse(synthEmpty)
       .applyOrElse(expr, synthBaseExpr(context))
 
   private def synthBaseExpr(context: TypeCheckerContext)(expr: Expr): F[Expr] = expr match
