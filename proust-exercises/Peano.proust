@@ -1,0 +1,61 @@
+not : Type -> Type;
+not = \A -> A -> Empty;
+
+eqSym : (A : Type) -> (x, y : A) -> (x == y) -> (y == x);
+eqSym = \_ x y eq -> eqElim x y (\z -> z == x) (eqRefl x) eq;
+
+eqTrans : (A : Type) -> (x, y, z : A) -> (x == y) -> (y == z) -> (x == z);
+eqTrans = \A x y z eq1 eq2 -> eqElim y x (\w -> w == z) eq2 (eqSym A x y eq1);
+
+eqAp : (A, B : Type) -> (x, y : A) -> (f : A -> B) -> (x == y) -> (f x) == (f y);
+eqAp = \A B x y f eq -> eqElim x y (\w -> (f x) == (f w)) (eqRefl (f x)) eq;
+
+EqNat : Nat -> Nat -> Type;
+EqNat = \n ->
+  natElim n (\_ -> Nat -> Type)
+    (\m -> natElim m (\_ -> Type) Unit (\_ _ -> Empty))
+    (\n isEqN m -> natElim m (\_ -> Type) Empty (\m _ -> isEqN m));
+
+eqNatRefl : (n : Nat) -> EqNat n n;
+eqNatRefl = \n -> natElim n (\n -> EqNat n n) unit (\n isEq -> isEq);
+
+toEqNat : (n, m : Nat) -> (n == m) -> EqNat n m;
+toEqNat = \n m eq -> eqElim n m (\w -> EqNat n w) (eqNatRefl n) eq;
+
+plus : Nat -> Nat -> Nat;
+plus = \n m -> natElim n (\_ -> Nat) m (\_ m -> suc m);
+
+one : Nat;
+one = suc zero;
+
+two : Nat;
+two = suc one;
+
+three : Nat;
+three = suc two;
+
+one-plus-two : (plus one two) == three;
+one-plus-two = eqRefl three;
+
+one-plus-two-obsv : EqNat (plus one two) three;
+one-plus-two-obsv = unit;
+
+plus-left-suc : (n, m : Nat) -> (plus (suc n) m) == (suc (plus n m));
+plus-left-suc = \n m -> eqRefl (suc (plus n m));
+
+plus-left-identity : (n : Nat) -> (plus zero n) == n;
+plus-left-identity = \n -> eqRefl n;
+
+plus-right-identity : (n : Nat) -> (plus n zero) == n;
+plus-right-identity = \n ->
+  natElim
+    n
+    (\n -> (plus n zero) == n)
+    (eqRefl zero)
+    (\k ih -> eqAp Nat Nat (plus k zero) k (\n -> suc n) ih);
+
+peano7 : (n, m : Nat) -> (n == m) -> (suc n) == (suc m);
+peano7 = \n m -> eqAp Nat Nat n m (\n -> suc n);
+
+peano8 : (n : Nat) -> not (zero == (suc n));
+peano8 = \n -> toEqNat zero (suc n);

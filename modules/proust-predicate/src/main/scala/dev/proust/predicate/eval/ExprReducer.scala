@@ -29,7 +29,7 @@ final class ExprReducerImpl[F[_]: Monad](using
     private def eval(bindings: Map[Identifier, Expr]): F[Expr] =
       expr match
         case Expr.Type                             => Expr.Type.pure
-        case Expr.Var(x)                           => bindings.getOrElse(x, expr).pure
+        case Expr.Var(x)                           => evalVar(bindings, x)
         case Expr.Lambda(x, e)                     => e.eval(bindings).map(Expr.Lambda(x, _))
         case Expr.Annotate(e, t)                   => e.eval(bindings)
         case EqElim(x, y, prop, propx, eq)         => evalEqElim(bindings, x, y, prop, propx, eq)
@@ -38,6 +38,11 @@ final class ExprReducerImpl[F[_]: Monad](using
         case expr: Expr.Apply                      => evalApply(bindings, expr)
         case expr: Expr.Arrow                      => evalArrow(bindings, expr)
   }
+
+  private def evalVar(bindings: Map[Identifier, Expr], x: Identifier): F[Expr] =
+    bindings.get(x) match
+      case None       => Expr.Var(x).pure
+      case Some(expr) => expr.eval(bindings)
 
   private def evalApply(bindings: Map[Identifier, Expr], app: Expr.Apply): F[Expr] =
     val Expr.Apply(f, arg) = app
