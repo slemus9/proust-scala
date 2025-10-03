@@ -33,5 +33,8 @@ object AlphaEquivalence {
     case (Expr.Arrow(x, t1, t2), Expr.Arrow(y, w1, w2)) =>
       val newBindings = bindingMap + (x -> y)
       alphaEq(t1, w1, newBindings) && alphaEq(t2, w2, newBindings)
+    case (Expr.Sigma(x, t1, t2), Expr.Sigma(y, w1, w2)) =>
+      val newBindings = bindingMap + (x -> y)
+      alphaEq(t1, w1, newBindings) && alphaEq(t2, w2, newBindings)
     case _                                              => false
 }

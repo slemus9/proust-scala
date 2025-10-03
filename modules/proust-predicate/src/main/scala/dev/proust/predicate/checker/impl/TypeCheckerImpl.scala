@@ -5,6 +5,7 @@ import cats.Monad
 import dev.proust.predicate.checker.ExprTypeChecker
 import dev.proust.predicate.checker.TypeChecker
 import dev.proust.predicate.checker.TypeCheckerContext
+import dev.proust.predicate.lang.Expr
 import dev.proust.predicate.lang.ExprDefinition
 import dev.proust.predicate.lang.Program
 
@@ -22,7 +23,8 @@ private[checker] final class TypeCheckerImpl[F[_]: Monad](
     val ExprDefinition(name, maybeType, expr) = exprDef
     maybeType
       .fold(checker.synthType(context, expr)) { _type =>
-        checker.checkExpr(context, expr, _type)
+        checker.checkExpr(context, _type, Expr.Type) *>
+          checker.checkExpr(context, expr, _type)
       }
       .map { _type =>
         context.addType(name, _type).addExpr(name, expr)

@@ -1,0 +1,11 @@
+not : Type -> Type;
+not = \A -> A -> Empty;
+
+Pair : (A, B: Type) -> Type;
+Pair = \A B -> (x : A, B);
+
+first : (A : Type) -> (B : A -> Type) -> (p : (x : A, B x)) -> A;
+first = \A _ p -> sigmaElim (\_ -> A) (\x _ -> x) p;
+
+second : (A : Type) -> (B : A -> Type) -> (p : (x : A, B x)) -> B (first A B p);
+second = \A B p -> sigmaElim (\p -> B (first A B p)) (\_ y -> y) p;

@@ -45,6 +45,7 @@ final class SubstitutionImpl[F[_]: Monad](using
         case expr: Expr.Var         => expr.pure
         case expr: Expr.Lambda      => substLambda(expr, y, s)
         case expr: Expr.Arrow       => substArrow(expr, y, s)
+        case expr: Expr.Sigma       => substSigma(expr, y, s)
         case Expr.Apply(f, arg)     => binarySubst(y, s)(f, arg)(Expr.Apply.apply)
         case Expr.Annotate(e, t)    => binarySubst(y, s)(e, t)(Expr.Annotate.apply)
   }
@@ -81,6 +82,23 @@ final class SubstitutionImpl[F[_]: Monad](using
         w1 <- t1.rename(x, z).flatMap(_.substExpr(y, s))
         w2 <- t2.rename(x, z).flatMap(_.substExpr(y, s))
       yield Expr.Arrow(z, w1, w2)
+
+  private def substSigma(
+      sigma: Expr.Sigma,
+      y: Identifier,
+      s: Expr
+  ): F[Expr] = sigma match
+    case Expr.Sigma(x, _, _) if x === y => sigma.pure
+
+    case Expr.Sigma(x, t1, t2) if x === Expr.IgnoredBinding || !s.hasFree(x) =>
+      binarySubst(y, s)(t1, t2)(Expr.Sigma(x, _, _))
+
+    case Expr.Sigma(x, t1, t2) =>
+      for
+        z  <- naming.fresh(x)
+        w1 <- t1.rename(x, z).flatMap(_.substExpr(y, s))
+        w2 <- t2.rename(x, z).flatMap(_.substExpr(y, s))
+      yield Expr.Sigma(z, w1, w2)
 
   private def binarySubst(y: Identifier, s: Expr)(
       e1: Expr,

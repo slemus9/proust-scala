@@ -45,3 +45,8 @@ final class ExpectedFunctionTypeError(actualType: Expr) extends TypeError {
   override val getMessage: String =
     s"Expected a Function Type but received: ${actualType.show}"
 }
+
+final class ExpectedSigmaTypeError(actualType: Expr) extends TypeError {
+  override val getMessage: String =
+    s"Expected a Sigma Type but received: ${actualType.show}"
+}
