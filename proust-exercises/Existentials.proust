@@ -4,8 +4,25 @@ not = \A -> A -> Empty;
 Pair : (A, B: Type) -> Type;
 Pair = \A B -> (x : A, B);
 
+curry : (A : Type) -> (B : A -> Type) -> (P : (x : A, B x) -> Type)
+  -> ((r : (x : A, B x)) -> P r)
+  -> (x : A) -> (b : B x) -> P (pair x b);
+curry = \_ _ _ f x b -> f (pair x b);
+
 first : (A : Type) -> (B : A -> Type) -> (p : (x : A, B x)) -> A;
 first = \A _ p -> sigmaElim (\_ -> A) (\x _ -> x) p;
 
 second : (A : Type) -> (B : A -> Type) -> (p : (x : A, B x)) -> B (first A B p);
 second = \A B p -> sigmaElim (\p -> B (first A B p)) (\_ y -> y) p;
+
+notExists-allNot : (A : Type) -> (P : A -> Type) -> (not (x : A, P x)) -> (x : A) -> not (P x);
+notExists-allNot = \A P -> curry A P (\_ -> Empty);
+
+existsNot-notAll : (A : Type) -> (P : A -> Type) -> (x : A, not (P x)) -> not ((x : A) -> P x);
+existsNot-notAll = \A P existsNot f -> sigmaElim (\_ -> Empty) (\x notPx -> notPx (f x)) existsNot;
+
+notPointWise-notEq : (A, B : Type)
+  -> (f, g : A -> B)
+  -> (x : A, not ((f x) == (g x)))
+  -> not ((x : A) -> (f x) == (g x));
+notPointWise-notEq = \A _ f g -> existsNot-notAll A (\x -> (f x) == (g x));
