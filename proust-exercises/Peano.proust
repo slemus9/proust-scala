@@ -59,3 +59,27 @@ peano7 = \n m -> eqAp Nat Nat n m (\n -> suc n);
 
 peano8 : (n : Nat) -> not (zero == (suc n));
 peano8 = \n -> toEqNat zero (suc n);
+
+Even : Nat -> Type;
+Even = \n ->
+  natElim
+    n
+    (\_ -> Bool -> Type)
+    (\checkEven -> boolElim checkEven (\_ -> Type) Unit Empty)
+    (\k kIsEven checkEven -> boolElim checkEven (\_ -> Type) (kIsEven false) (kIsEven true))
+    true;
+
+Odd : Nat -> Type;
+Odd = \n -> not (Even n);
+
+twoIsEven : Even two;
+twoIsEven = unit;
+
+threeIsOdd : Odd three;
+threeIsOdd = \isThreeEven -> isThreeEven;
+
+fourIsEven : Even (suc three);
+fourIsEven = unit;
+
+fiveIsOdd : Odd (suc (suc three));
+fiveIsOdd = \isFiveEven -> isFiveEven;

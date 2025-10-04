@@ -11,6 +11,7 @@ import dev.proust.predicate.eval.ExprReducer
 import dev.proust.predicate.lang.AlphaEquivalence.given
 import dev.proust.predicate.lang.EmptyElim
 import dev.proust.predicate.lang.Expr
+import dev.proust.predicate.lang.SigmaIntro
 import dev.proust.predicate.substitution.NamingContext
 import dev.proust.predicate.substitution.Substitution
 
@@ -37,9 +38,10 @@ private[checker] final class ExprTypeCheckerImpl[F[_]: MonadThrow](using
         log.tell(TypeCheckStep.CheckType(context.types, expr, _type))
       }
       .flatMap {
-        case (EmptyElim(empty), _type)    => checkEmpty(context, empty, _type)
-        case (expr: Lambda, _type: Arrow) => checkLambda(context, expr, _type)
-        case (expr, t)                    =>
+        case (EmptyElim(empty), _type)        => checkEmpty(context, empty, _type)
+        case (expr: Lambda, _type: Arrow)     => checkLambda(context, expr, _type)
+        case (SigmaIntro(x, y), sigma: Sigma) => checkSigmaIntro(context, x, y, sigma)
+        case (expr, t)                        =>
           synthType(context, expr)
             .flatMap(_.reduce(context.bindings))
             .flatTap(w => log.tell(TypeCheckStep.CheckSynth(t, w)))

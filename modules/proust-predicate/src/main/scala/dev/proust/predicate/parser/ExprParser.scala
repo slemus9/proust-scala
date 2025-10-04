@@ -17,7 +17,7 @@ object ExprParser {
     (whitespace *> annotatedExpr).parseAll(str).left.map(ParseError.apply)
 
   def expr: Parser[Expr] =
-    Parser.defer(lambda | arrow.backtrack | eqType.backtrack | application | baseExpr)
+    Parser.defer(lambda | sigma.backtrack | arrow.backtrack | eqType.backtrack | application | baseExpr)
 
   private val variable: Parser[Expr] =
     identifier.map {
@@ -53,6 +53,13 @@ object ExprParser {
     val range          = matching("->") *> expr
     (domain ~ range).map { case ((params, domain), range) =>
       params.toList.foldRight(range)(Expr.Arrow(_, domain, _))
+    }
+
+  private def sigma: Parser[Expr] =
+    val first  = (identifier <* matching(':')) ~ expr
+    val second = (matching(',') *> expr)
+    (first ~ second).map { case ((x, t1), t2) =>
+      Expr.Sigma(x, t1, t2)
     }
 
   private def annotated(parser: Parser[Expr]): Parser[Expr] =

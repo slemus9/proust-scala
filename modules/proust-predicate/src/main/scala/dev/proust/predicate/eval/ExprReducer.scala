@@ -35,8 +35,10 @@ final class ExprReducerImpl[F[_]: Monad](using
         case EqElim(x, y, prop, propx, eq)         => evalEqElim(bindings, x, y, prop, propx, eq)
         case BoolElim(bool, prop, onTrue, onFalse) => evalBoolElim(bindings, bool, prop, onTrue, onFalse)
         case NatElim(n, prop, propZero, propSuc)   => evalNatElim(bindings, n, prop, propZero, propSuc)
+        case SigmaElim(prop, f, p)                 => evalSigmaElim(bindings, prop, f, p)
         case expr: Expr.Apply                      => evalApply(bindings, expr)
         case expr: Expr.Arrow                      => evalArrow(bindings, expr)
+        case expr: Expr.Sigma                      => evalSigma(bindings, expr)
   }
 
   private def evalVar(bindings: Map[Identifier, Expr], x: Identifier): F[Expr] =
@@ -57,6 +59,13 @@ final class ExprReducerImpl[F[_]: Monad](using
       t1 <- t.eval(bindings)
       w1 <- w.eval(bindings)
     yield Expr.Arrow(x, t1, w1)
+
+  private def evalSigma(bindings: Map[Identifier, Expr], sigma: Expr.Sigma): F[Expr] =
+    val Expr.Sigma(x, t, w) = sigma
+    for
+      t1 <- t.eval(bindings)
+      w1 <- w.eval(bindings)
+    yield Expr.Sigma(x, t1, w1)
 
   private def evalEqElim(
       bindings: Map[Identifier, Expr],
@@ -116,5 +125,20 @@ final class ExprReducerImpl[F[_]: Monad](using
           redPropZero <- propZero.eval(bindings)
           redPropSuc  <- propSuc.eval(bindings)
         yield NatElim(n, redProp, redPropZero, redPropSuc)
+    }
+
+  private def evalSigmaElim(
+      bindings: Map[Identifier, Expr],
+      prop: Expr,
+      f: Expr,
+      p: Expr
+  ): F[Expr] =
+    p.eval(bindings).flatMap {
+      case SigmaIntro(x, y) => f(x)(y).eval(bindings)
+      case p                =>
+        for
+          redProp <- prop.eval(bindings)
+          redF    <- f.eval(bindings)
+        yield SigmaElim(redProp, redF, p)
     }
 }

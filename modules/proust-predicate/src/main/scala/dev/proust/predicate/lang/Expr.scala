@@ -7,11 +7,12 @@ import dev.proust.predicate.macros.ExprStringOps
 enum Expr {
   self =>
 
-  case Type                                                // The type of all valid types
+  case Type                                                           // The type of all valid types
   case Var(name: Identifier)
   case Lambda(param: Identifier, body: Expr)
   case Apply(function: Expr, arg: Expr)
-  case Arrow(param: Identifier, domain: Expr, range: Expr) // Dependent Function Type
+  case Arrow(param: Identifier, domain: Expr, range: Expr)            // Dependent Function Type
+  case Sigma(firstParam: Identifier, firstDomain: Expr, second: Expr) // Dependent Pair Type
   case Annotate(expr: Expr, _type: Expr)
 
   def isRecursive: Boolean = self match
@@ -27,6 +28,7 @@ enum Expr {
     case Expr.Var(x)           => x === y && !bounded(x)
     case Expr.Lambda(x, e)     => e.hasFree(y, bounded + x)
     case Expr.Arrow(x, t1, t2) => t1.hasFree(y, bounded + x) || t2.hasFree(y, bounded + x)
+    case Expr.Sigma(x, t1, t2) => t1.hasFree(y, bounded + x) || t2.hasFree(y, bounded + x)
     case Expr.Apply(f, arg)    => f.hasFree(y, bounded) || arg.hasFree(y, bounded)
     case Expr.Annotate(e, t)   => e.hasFree(y, bounded) || t.hasFree(y, bounded)
 

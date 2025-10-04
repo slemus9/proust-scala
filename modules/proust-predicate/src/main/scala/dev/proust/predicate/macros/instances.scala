@@ -20,6 +20,7 @@ object instances {
         case ProustExpr.Var(x)           => '{ ProustExpr.Var(${ Expr(x) }) }
         case ProustExpr.Lambda(x, e)     => '{ ProustExpr.Lambda(${ Expr(x) }, ${ Expr(e) }) }
         case ProustExpr.Arrow(x, t1, t2) => '{ ProustExpr.Arrow(${ Expr(x) }, ${ Expr(t1) }, ${ Expr(t2) }) }
+        case ProustExpr.Sigma(x, t1, t2) => '{ ProustExpr.Sigma(${ Expr(x) }, ${ Expr(t1) }, ${ Expr(t2) }) }
         case ProustExpr.Annotate(e, t)   => '{ ProustExpr.Annotate(${ Expr(e) }, ${ Expr(t) }) }
         case ProustExpr.Apply(f, arg)    => '{ ProustExpr.Apply(${ Expr(f) }, ${ Expr(arg) }) }
 }
